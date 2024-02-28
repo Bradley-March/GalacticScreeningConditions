@@ -23,15 +23,14 @@ r_max = galf.r_max
 
 #%% define h5py save/load functions
 
-def get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):
+def get_filename(logMs: float, logLc: float, logMvir: float, 
+                 N_r: int, N_th: int, cwd=cwd):
     # round to 5 decimals to prevent floating point error when saving/loading
     logMs = np.round(float(logMs), 5)
     logLc = np.round(float(logLc), 5)
     logMvir = np.round(float(logMvir), 5)
-    filename = "logMs={:}, loglams={:}, logM_vir={:}, N_r={:}, N_th={:}.hdf5".format(
-                                                logMs, logLc, logMvir, N_r, N_th)
-    filename = cwd + '//solutions//sym//' + filename
-    return filename
+    filename = "{}_{}_{}_{}_{}..hdf5".format(logMvir, logMs, logLc, N_r, N_th)
+    return  cwd + '/solutions/sym/' + filename
 
 def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
