@@ -213,8 +213,6 @@ def get_a5(u, u_inf, grid=None, magnitude=True, scaled=False):
     or magnitude, and to scale by the maximal value. 
     Note: This quantity should have a prefactor, but since this prefactor
     has a 1/lambda in we instead only give here an unscaled version."""
-    # This calculation should have a prefactor, but since it has a 1/lambda in 
-    # we instead only give here an unscaled version (to scale by max a5)
     if grid is None:
         N_r, N_th = u.shape
         grid = Symm2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
