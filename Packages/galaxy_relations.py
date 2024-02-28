@@ -27,16 +27,18 @@ def virial_mass_to_stellar_mass(virial_mass, logM1=11.590, N=0.0351,
 def stellar_mass_to_virial_mass(stellar_mass, logM1=11.590, N=0.0351, 
                                 beta=1.376, gamma=0.608):
     with np.errstate(all='ignore'):
-        inverse_virial_mass2stellar_mass = inversefunc(virial_mass_to_stellar_mass, 
-                                              args=(logM1, N, beta, gamma), 
-                                              domain=[M_sun, 1e30 * M_sun])
+        inverse_virial_mass2stellar_mass = inversefunc(
+                                                virial_mass_to_stellar_mass, 
+                                                args=(logM1, N, beta, gamma), 
+                                                domain=[M_sun, 1e30 * M_sun])
         virial_mass = inverse_virial_mass2stellar_mass(stellar_mass)
         return virial_mass
 
 #%% Dark matter parameter pipeline functions
 
 def calc_concentration_parameter(virial_mass):
-    concentration_parameter = 10**(0.905 - 0.101*np.log10(virial_mass * h/(M_sun * 1e12)))
+    concentration_parameter = 10**(0.905 - 0.101*np.log10(virial_mass * 
+                                                          h/(M_sun * 1e12)))
     return concentration_parameter
 
 def calc_virial_radius(virial_mass):
@@ -47,20 +49,24 @@ def calc_virial_scale_radius(virial_radius, concentration_parameter):
     virial_scale_radius = virial_radius / concentration_parameter
     return virial_scale_radius
 
-def calc_virial_normalisation(virial_mass, virial_radius, concentration_parameter):
+def calc_virial_normalisation(virial_mass, virial_radius, 
+                              concentration_parameter):
     # calculate virial normalisation
-    virial_scale_radius = calc_virial_scale_radius(virial_radius, concentration_parameter)
-    denom = np.log(1 + concentration_parameter) - (concentration_parameter / (1 + concentration_parameter))
+    virial_scale_radius = calc_virial_scale_radius(virial_radius, 
+                                                   concentration_parameter)
+    denom = np.log(1 + concentration_parameter) - (concentration_parameter /
+                                               (1 + concentration_parameter))
     denom = 4 * np.pi * virial_scale_radius**3 * denom
     virial_normalisation = virial_mass / denom
     return virial_normalisation
     
 #%% Stellar parameter pipeline functions
 
-def calc_stellar_scale_length(stellar_mass, 
-                              alpha=0.14, beta=0.39, gamma=0.10, M_0=3.98e10*M_sun):
+def calc_stellar_scale_length(stellar_mass, alpha=0.14, beta=0.39, gamma=0.10, 
+                              M_0=3.98e10*M_sun):
     # calculate half-light radius 
-    R_hl = gamma * (stellar_mass / M_sun)**(alpha) * (1 + stellar_mass / M_0)**(beta - alpha)
+    R_hl = gamma * (stellar_mass / M_sun)**(alpha) \
+                   * (1 + stellar_mass / M_0)**(beta - alpha)
     # convert to stellar radial scale length
     stellar_scale_length = 0.595824 * R_hl * kpc
     return stellar_scale_length
@@ -99,8 +105,11 @@ def calc_stellar_disk_density(rgrid, thgrid, stellar_normalisation,
 def get_dark_matter_parameters(virial_mass):
     concentration_parameter = calc_concentration_parameter(virial_mass)
     virial_radius = calc_virial_radius(virial_mass)
-    virial_scale_radius = calc_virial_scale_radius(virial_radius, concentration_parameter)
-    virial_normalisation = calc_virial_normalisation(virial_mass, virial_radius, concentration_parameter)
+    virial_scale_radius = calc_virial_scale_radius(virial_radius,
+                                                   concentration_parameter)
+    virial_normalisation = calc_virial_normalisation(virial_mass, 
+                                                     virial_radius, 
+                                                     concentration_parameter)
 
     # create dictionary for Dark Matter Parameters 
     DMP_dict = {'M': virial_mass,
@@ -115,7 +124,8 @@ def get_dark_matter_parameters(virial_mass):
 def get_stellar_disc_parameters(virial_mass):
     stellar_mass = virial_mass_to_stellar_mass(virial_mass)
     stellar_scale_length = calc_stellar_scale_length(stellar_mass)
-    stellar_normalisation = calc_stellar_normalisation(stellar_mass, stellar_scale_length)
+    stellar_normalisation = calc_stellar_normalisation(stellar_mass, 
+                                                       stellar_scale_length)
     stellar_scale_height = calc_stellar_scale_height(stellar_scale_length)
 
     # create dictionary for Stellar Disc Parameters 
@@ -130,16 +140,18 @@ def get_stellar_disc_parameters(virial_mass):
 
 def get_dark_matter_density(virial_mass, rgrid, splashback_cutoff=True):
     DMP = get_dark_matter_parameters(virial_mass)
-    dark_matter_density = calc_dark_matter_desnity(rgrid, DMP['norm'], DMP['Rs'])
-    if splashback_cutoff is True:
-        dark_matter_density[rgrid >= DMP['SB']] = 0 # cut off density at SB radius
+    dark_matter_density = calc_dark_matter_desnity(rgrid, 
+                                                   DMP['norm'], DMP['Rs'])
+    if splashback_cutoff is True: # cut off density at SB radius
+        dark_matter_density[rgrid >= DMP['SB']] = 0 
     return dark_matter_density
 
-def get_stellar_disc_density(virial_mass, rgrid, thgrid, splashback_cutoff=True):
+def get_stellar_disc_density(virial_mass, rgrid, thgrid, 
+                             splashback_cutoff=True):
     SDP = get_stellar_disc_parameters(virial_mass)
-    stellar_disk_density = calc_stellar_disk_density(rgrid, thgrid,
-                                                     SDP['norm'], SDP['R'], SDP['z'])
-    if splashback_cutoff is True:
+    stellar_disk_density = calc_stellar_disk_density(rgrid, thgrid, 
+                                             SDP['norm'], SDP['R'], SDP['z'])
+    if splashback_cutoff is True: # cut off density at SB radius
         DMP = get_dark_matter_parameters(virial_mass)
         stellar_disk_density[rgrid >= DMP['SB']] = 0
     return stellar_disk_density
@@ -147,7 +159,8 @@ def get_stellar_disc_density(virial_mass, rgrid, thgrid, splashback_cutoff=True)
 def get_densities(virial_mass, rgrid, thgrid, splashback_cutoff=True, 
                   total=False):
     rho_DM = get_dark_matter_density(virial_mass, rgrid, splashback_cutoff)
-    rho_SD = get_stellar_disc_density(virial_mass, rgrid, thgrid, splashback_cutoff)
+    rho_SD = get_stellar_disc_density(virial_mass, rgrid, thgrid, 
+                                      splashback_cutoff)
     
     rhos = {'DM': rho_DM,
             'SD': rho_SD}
