@@ -176,37 +176,43 @@ def logMs_crit_binary_screening(logMvir):
 #%% Numerical approximate rs solution
 
 def get_rho_SSB(logMs, logLc):
+    """Calculate the spontaneous symmetry breaking density scale."""
     Ms = 10**logMs
     Lc = kpc * 10**logLc
     rho_SSB = (c*c / (16 * np.pi * G)) * (Ms / Lc)**2
     return rho_SSB
 
 def get_rho_SSB_rs(logMs, logLc, drho, grid=None):
-   
-    # check if SSB has occured yet
-    rho_SSB = get_rho_SSB(logMs, logLc)
-    if rho_SSB < rho_m:
-        return np.inf
-
-    # find where rho < rho_SSB       
-    rho = drho + rho_m
-    scr_bool = rho < rho_SSB
+   """Calculate the approximate screening surface, as the region where the 
+   density is equal to the SSB density."""
+   # check if SSB has occured yet
+   rho_SSB = get_rho_SSB(logMs, logLc)
+   if rho_SSB < rho_m:
+       return np.inf
+ 
+   # find where rho < rho_SSB       
+   rho = drho + rho_m
+   scr_bool = rho < rho_SSB
     
-    # determine if the galaxy is fully screened
-    if scr_bool.all():
-        return -1
-    else:  
-        if grid is None:
-            N_r, N_th = drho.shape
-            grid = Symm2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
-        rs_inds = np.argmax(scr_bool, axis=0)
-        rs = grid.r[:, 0][rs_inds]
-        
-    return rs
+   # determine if the galaxy is fully screened
+   if scr_bool.all():
+       return -1
+   else:  
+       if grid is None:
+           N_r, N_th = drho.shape
+           grid = Symm2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
+       rs_inds = np.argmax(scr_bool, axis=0)
+       rs = grid.r[:, 0][rs_inds]
+       
+   return rs
 
 #%% Fifth force calculation
 
 def get_a5(u, u_inf, grid=None, magnitude=True, scaled=False):
+    """Calculate the fifth force. Options to return the vector components 
+    or magnitude, and to scale by the maximal value. 
+    Note: This quantity should have a prefactor, but since this prefactor
+    has a 1/lambda in we instead only give here an unscaled version."""
     # This calculation should have a prefactor, but since it has a 1/lambda in 
     # we instead only give here an unscaled version (to scale by max a5)
     if grid is None:
