@@ -9,8 +9,9 @@ Author: Bradley March
 # Import relevent modules
 import numpy as np
 import h5py
-import os
+import os 
 cwd = os.getcwd() 
+sep = os.sep
 
 # Import user created modules
 from Solvers.fR2D import fR2DSolver # 2D f(R) solver
@@ -30,7 +31,7 @@ def get_filename(logfR0: float, logMvir: float,
     logMvir = np.round(float(logMvir), 5)
     logfR0 = np.round(float(logfR0), 5)
     filename = "{}_{}_{}_{}.hdf5".format(logMvir, logfR0, N_r, N_th)
-    return  cwd + '/solutions/fR/' + filename
+    return  os.path.join(cwd, 'solutions', 'fR', filename)
 
 def save_solution(logfR0, logMvir, N_r, N_th, fR, cwd=cwd):
     """Saves the fR field profile, along with its assosiated parameters."""

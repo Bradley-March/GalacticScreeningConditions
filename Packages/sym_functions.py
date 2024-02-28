@@ -31,7 +31,7 @@ def get_filename(logMs: float, logLc: float, logMvir: float,
     logLc = np.round(float(logLc), 5)
     logMvir = np.round(float(logMvir), 5)
     filename = "{}_{}_{}_{}_{}..hdf5".format(logMvir, logMs, logLc, N_r, N_th)
-    return  cwd + '/solutions/sym/' + filename
+    return  os.path.join(cwd, 'solutions', 'sym', filename)
 
 def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
     """Saves the sym field profile, along with its assosiated parameters."""
