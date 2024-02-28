@@ -812,7 +812,7 @@ for j, logMvir in enumerate(logMvir_range):
 # get binary screening boundary (with extended Mvir to cover whole plot)
 logMvir_extened = np.array([logMvir_range[0] - dMvir] + list(logMvir_range) 
                            + [logMvir_range[-1] + dMvir])
-logfR0_crit_range = fRf.fR0_crit_binary_screening(logMvir_extened)
+logfR0_crit_range = fRf.logfR0_crit_binary_screening(logMvir_extened)
 logMs_crit_range = symf.logMs_crit_binary_screening(logMvir_extened)
 
 ### Plotting Fig 4 ###
@@ -1057,7 +1057,7 @@ for i, logMs in enumerate(logMs_range):
             rss_approx[i, j] = temp_approx
             
 logMs_crit = symf.logMs_crit_binary_screening(logMvir)
-logfR0_crit = fRf.fR0_crit_binary_screening(logMvir)
+logfR0_crit = fRf.logfR0_crit_binary_screening(logMvir)
 
 #%% plotting fig 5 
 linecolor = 'skyblue'
