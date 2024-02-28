@@ -23,8 +23,9 @@ r_max = galf.r_max
 
 #%% define h5py save/load functions
 
-def get_filename(logMs: (float, int), logLc: (float, int), logMvir: (float, int), 
+def get_filename(logMs: float, logLc: float, logMvir: float, 
                  N_r: int, N_th: int, cwd=cwd) -> str:
+    """Generates the filename for given input parameters."""
     # round to 5 decimals to prevent floating point error when saving/loading
     logMs = np.round(float(logMs), 5)
     logLc = np.round(float(logLc), 5)
@@ -33,8 +34,8 @@ def get_filename(logMs: (float, int), logLc: (float, int), logMvir: (float, int)
     return  cwd + '/solutions/sym/' + filename
 
 def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
+    """Saves the sym field profile, along with its assosiated parameters."""
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
-    
     file = h5py.File(filename, 'w')
     
     # set up header group
@@ -53,14 +54,14 @@ def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
     return
 
 def load_solution(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):
+    """Loads the sym field profile, for the assosiated input parameters."""
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
-    
     # check if solution already exists
     if os.path.exists(filename) is False:
-        err1 = "No symmetron solution saved with parameters: "
-        err2 = "logMs={:}, loglams={:}, logM_vir={:}, N_r={:}, N_th={:}".format(
-                        logMs, logLc, logMvir, N_r, N_th)
-        raise FileNotFoundError(err1 + err2)
+        err = "No symmetron solution saved with parameters: "
+        err += "logMs={}, loglams={}, logM_vir={}, N_r={}, N_th={}".format(
+                                            logMs, logLc, logMvir, N_r, N_th)
+        raise FileNotFoundError(err)
     
     # open file and extract fR solution
     file = h5py.File(filename, 'r')
@@ -73,7 +74,8 @@ def load_solution(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):
 
 #%% Solver function
 
-def solve_field(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):    
+def solve_field(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):   
+    """Solve and save the sym field for given input variables."""
     # define filename... 
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
     # ... and check if solution already exists
@@ -110,6 +112,9 @@ def solve_field(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):
 
 def calc_rs(u, u_inf, grid=None, 
             threshold=1e-1, unscrthreshold=1, unscrlapthreshold=1e-1):
+    """Calculate the position of the screening surface, using the threshold on
+    the scaled field. Unscreened solutions are determined by threshold on the
+    central field value and then a threshold on the central Laplacian value."""
     # check if SSB has happened yet
     if u_inf == 0:
         rs = np.inf
@@ -138,7 +143,7 @@ def calc_rs(u, u_inf, grid=None,
 
 def get_rs(logMs, logLc, logMvir, N_r, N_th,
            threshold=1e-1, unscrthreshold=1, unscrlapthreshold=1e-1):
-    
+    """Calculate the screening surfaces for given input parameters."""
     # load sym solution 
     u, u_inf = load_solution(logMs, logLc, logMvir, N_r, N_th)
 
@@ -155,10 +160,13 @@ def get_rs(logMs, logLc, logMvir, N_r, N_th,
 #%% Binary screening condition
 
 def critical_potential(logMs):
+    """Calculate the critical potential for a given model parameter."""
     crit_pot = 0.5 * (10**logMs)**2 * c*c
     return crit_pot
 
 def logMs_crit_binary_screening(logMvir):
+    """Calculate the critical value of logMs, that splits the boundary 
+    between fully screened and fully unscreened for the binary condition."""
     Mvir = 10**logMvir * M_sun
     dmp = galf.get_dark_matter_parameters(Mvir)
     Ms_crit = np.sqrt(2 * G * Mvir / dmp['R']) / c

@@ -23,7 +23,9 @@ r_max = galf.r_max
 
 #%% define h5py save/load functions
 
-def get_filename(logfR0: float, logMvir: float, N_r: int, N_th: int, cwd=cwd) -> str:
+def get_filename(logfR0: float, logMvir: float, 
+                 N_r: int, N_th: int, cwd=cwd) -> str:
+    """Generates the filename for given input parameters."""
     # round to 5 decimals to prevent floating point error when saving/loading
     logMvir = np.round(float(logMvir), 5)
     logfR0 = np.round(float(logfR0), 5)
@@ -31,8 +33,8 @@ def get_filename(logfR0: float, logMvir: float, N_r: int, N_th: int, cwd=cwd) ->
     return  cwd + '/solutions/fR/' + filename
 
 def save_solution(logfR0, logMvir, N_r, N_th, fR, cwd=cwd):
+    """Saves the fR field profile, along with its assosiated parameters."""
     filename = get_filename(logfR0, logMvir, N_r, N_th, cwd=cwd)
-    
     file = h5py.File(filename, 'w')
     
     # set up header group
@@ -49,14 +51,14 @@ def save_solution(logfR0, logMvir, N_r, N_th, fR, cwd=cwd):
     return
 
 def load_solution(logfR0, logMvir, N_r, N_th, cwd=cwd):
+    """Loads the fR field profile, for the assosiated input parameters."""
     filename = get_filename(logfR0, logMvir, N_r, N_th, cwd=cwd)
-    
     # check if solution not yet saved
     if os.path.exists(filename) is False:
-        err1 = "No f(R) solution saved with parameters: "
-        err2 = "logfR0={:}, logMvir={:}, N_r={:}, N_th={:}".format(
+        err = "No f(R) solution saved with parameters: "
+        err += "logfR0={}, logMvir={}, N_r={}, N_th={}".format(
                                                     logfR0, logMvir, N_r, N_th)
-        raise FileNotFoundError(err1 + err2)
+        raise FileNotFoundError(err)
     
     file = h5py.File(filename, 'r')
     fR = file['fR'][:]
@@ -66,7 +68,8 @@ def load_solution(logfR0, logMvir, N_r, N_th, cwd=cwd):
 
 #%% solver function
 
-def solve_field(logfR0, logMvir, N_r, N_th, cwd=cwd):    
+def solve_field(logfR0, logMvir, N_r, N_th, cwd=cwd): 
+    """Solve and save the fR field for given input variables."""
     # define filename... 
     filename = get_filename(logfR0, logMvir, N_r, N_th, cwd=cwd)
     # ... and check if solution already exists
@@ -100,17 +103,19 @@ def solve_field(logfR0, logMvir, N_r, N_th, cwd=cwd):
 #%% define functions for each fR EoM term 
 
 def delta_R(fR, fR0):
-    # Calculates the delta R term in the fR EoM
+    """Calculate delta R term in the fR EoM."""
     return R0 * (np.sqrt(fR0 / fR) - 1)
 
 def delta_rho_term(drho):
-    # Calculates the delta rho term in the fR EoM
+    """Calculate delta rho term in the fR EoM."""
     return drho * 8 * np.pi * G / c**2 
 
 #%% Calculate fR screening radius
 
 def calc_rs(fR, fR0, drho, grid=None, threshold=0.9, unscrthreshold=1e-3):
-    
+    """Calculate the position of the screening surface, using the ratio of the
+    two EoM terms. Unscreened solutions are determined by a threhsold on the
+    central field value."""
     # check if fully unscreened
     if all(fR[0, :] / fR0 > unscrthreshold):
         rs = -1
@@ -134,7 +139,7 @@ def calc_rs(fR, fR0, drho, grid=None, threshold=0.9, unscrthreshold=1e-3):
     return rs
 
 def get_rs(logfR0, logMvir, N_r, N_th, threshold=0.9, unscrthreshold=1e-3):
-    
+    """Calculate the screening surfaces for given input parameters."""
     # load field profile
     fR = load_solution(logfR0, logMvir, N_r, N_th)
 
@@ -156,9 +161,12 @@ def get_rs(logfR0, logMvir, N_r, N_th, threshold=0.9, unscrthreshold=1e-3):
 #%% Binary screening condition
 
 def critical_potential(logfR0):
+    """Calculate the critical potential for a given model parameter."""
     return 1.5 * 10**logfR0 * c**2
 
-def fR0_crit_binary_screening(logMvir):  
+def logfR0_crit_binary_screening(logMvir):  
+    """Calculate the critical value of logfR0, that splits the boundary 
+    between fully screened and fully unscreened for the binary condition."""
     # From velocity dispersion # (Eqn 25 in Desmond Ferreira 2020)
     Mvir = 10**logMvir * M_sun
     dmp = galf.get_dark_matter_parameters(Mvir)
@@ -169,8 +177,9 @@ def fR0_crit_binary_screening(logMvir):
 #%% Numerical approximate rs solution
 
 def get_rs_chi(logfR0, drho, grid=None):
-    # Numerically integrate chi definition to find rs
-
+    """Calculate the approximate (spherical) screening surface by numerically 
+    integrating the (spherically-averaged) density to calculate the position 
+    where the potential matches the critical potential."""
     # get critical potential
     chi = critical_potential(logfR0)
     
@@ -203,7 +212,8 @@ def get_rs_chi(logfR0, drho, grid=None):
 #%% Fifth force calculation
 
 def get_a5(fR, fR0, grid=None, magnitude=True, scaled=False):
-    
+    """Calculate the fifth force. Options to return the vector components 
+    or magnitude, and to scale by the maximal value."""
     if grid is None:
         N_r, N_th = fR.shape
         grid = fR2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
