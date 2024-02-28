@@ -11,7 +11,6 @@ import numpy as np
 import h5py
 import os 
 cwd = os.getcwd() 
-sep = os.sep
 
 # Import user created modules
 from Solvers.fR2D import fR2DSolver # 2D f(R) solver
