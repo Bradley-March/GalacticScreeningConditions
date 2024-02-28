@@ -7,9 +7,8 @@ Author: Bradley March
 import numpy as np
 
 def gradient(grid, f, fout, magnitude=True):
-    """Calculates the gradient of f, with outer BC fout, assuming zero gradient
-    at the centre and periodicity over theta."""
-           
+    """Calculates the gradient of f, with outer BC fout, assuming zero 
+    gradient at the centre and periodicity over theta."""
     hx, hy = grid.hq, grid.hct
     r = grid.r
     sinth = np.sin(grid.theta)
@@ -33,7 +32,6 @@ def gradient(grid, f, fout, magnitude=True):
 def laplacian(grid, f, fout):
     """Calculates the Laplacian of f, with outer BC fout, assuming zero 
     gradient at the centre and periodicity over theta."""
-   
     hx, hy = grid.hq, grid.hct
     rin, rout = grid.rin, grid.rout
     sin2, sout2 = grid.stin2, grid.stout2
@@ -61,7 +59,6 @@ def laplacian(grid, f, fout):
 
 def volume_elements(grid):
     """Calculates the volume of each grid element."""
-
     # get the inner and outer sin(theta) edges
     sth_in = np.sqrt(grid.stin2)
     sth_out = np.sqrt(grid.stout2)
