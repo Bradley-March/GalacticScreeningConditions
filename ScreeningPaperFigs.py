@@ -52,18 +52,18 @@ def get_full_polars(th, r, fg, extend_theta=True, rmaxplotted=None):
     boundary) to plot the full extent of the semi-circle.
     rmaxplotted: Cuts off values at the max radius."""
     
-    # Convert coordinates to vectors (if grid-like)
+    # convert coordinates to vectors (if grid-like)
     if th.ndim == 2:
         th = th[0, :]
     if r.ndim == 2:
         r = r[:, 0]
         
-    # Add extra theta coordinate to plot over full semi-circle
+    # add extra theta coordinate to plot over full semi-circle
     if extend_theta:
         th = np.hstack((th[-1] + np.pi, th, th[0] - np.pi))
         fg = np.hstack((fg[:, -1][:, None], fg, fg[:, 0][:, None]))
         
-    # Cut off the radial extent at rmaxplotted
+    # cut off the radial extent at rmaxplotted
     if rmaxplotted is not None:
         mask = r < rmaxplotted
         r = r[mask]
@@ -99,11 +99,9 @@ def bool_boundary_divider(data_bool, x, y, ax, linecolor='r', linewidth=1):
                 color=linecolor, linewidth=linewidth)
 
 
-#%% Fig 1 (4 panel)
-# log density
-# grid coordinates
-# fR field & curvature-density param
-# sym field & restricted sym field
+#%% Fig 1
+# log density                        ; grid coordinates
+# fR field & curvature-density param ; sym field & restricted sym field
 starttime = time.time()
 
 ### input params ###
@@ -115,19 +113,19 @@ logLc = -1.
 logMvir = 11.5
 ####################
 
-# Derived model parameters:
+# derive model parameters
 Mvir = 10**logMvir * M_sun
 fR0 = - 10**logfR0
 Lc = 10**(logLc) * kpc
 Ms = 10**(logMs)
 
-# Derived dark matter / stellar disc paramters:
+# get dark matter / stellar disc paramters
 dmp = galf.get_dark_matter_parameters(Mvir)
 sdp = galf.get_stellar_disc_parameters(Mvir)
 drho = galf.get_densities(Mvir, grid.r, grid.theta, 
                           splashback_cutoff=True, total=True)['total']
 
-# load pre-saved fR/sym solution (will be None if no solution saved)
+# load fR/sym solution 
 fR = fRf.load_solution(logfR0, logMvir, N_r, N_th)
 u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
 
@@ -139,28 +137,20 @@ with np.errstate(divide='ignore'):
     eom = dR / drho_term
 eom[eom == np.inf] = 0
 
-
-### plotting ###
-    
 # set up figure
 asp = 5/3
 fig = plt.figure(figsize=(size, size / asp))
-left = 0.0
-right = 1.0
-bottom = 0.02
-top = 1
-Xgap = 0.0
-Ygap = 0.1
 
+# panel sizes
 dX = 0.25
 dY = 0.4
-
+# panel positions
 X1L, X2L = 0.0755, 0.559
 semicircle_width = 0.12235
 X1R, X2R = X1L + semicircle_width, X2L + semicircle_width
-Y2 = bottom
-Y1 = Y2 + dY + Ygap 
-
+Y2 = 0.02
+Y1 = Y2 + dY + 0.1 
+# create axes
 ax12 = fig.add_axes([X1L + 0.063, Y1, dX, dY], projection='polar')
 ax3 = fig.add_axes([X2L, Y1, dX, dY], projection='polar')
 ax4 = fig.add_axes([X2R, Y1, dX, dY], projection='polar')
@@ -170,6 +160,7 @@ ax7 = fig.add_axes([X2L, Y2, dX, dY], projection='polar')
 ax8 = fig.add_axes([X2R, Y2, dX, dY], projection='polar')
 axes = [ax12, ax3, ax4, ax5, ax6, ax7, ax8]
 
+# colourbar positions and axes
 fullcircle_width = 0.28
 cX1L, cX2L = 0.106, 0.59
 cX1R, cX2R = cX1L + fullcircle_width, cX2L + fullcircle_width
@@ -181,8 +172,9 @@ cax6 = fig.add_axes([cX1R, cY2, cdX, cdY])
 cax7 = fig.add_axes([cX2L, cY2, cdX, cdY])
 cax8 = fig.add_axes([cX2R, cY2, cdX, cdY])
 caxes = [cax1, cax5, cax6, cax7, cax8]
-ims = []
+ims = [] # to append images for colourbar input
 
+# title positions and axes
 tX1, tX2 = 0, 0.5
 tY1, tY2 = 0.95, 0.45
 tdX, tdY = 0.5, 0.0
@@ -193,36 +185,36 @@ tax4 = fig.add_axes([tX2, tY2, tdX, tdY])
 taxes = [tax1, tax2, tax3, tax4]
 titles = ['Density Profile', 'Coordinate Grid',
           r'$f(R)$ Solution', 'Symmetron Solution']
-
+# remove axis from boxes and add text
 for ind, ax in enumerate(taxes):
     ax.axis('off')
     ax.text(0.5, 0.5, s=titles[ind], ha='center')
 
+# set general properties for panel axes
 for LR_ind, ax in enumerate(axes):
     ax.grid(False)
     ax.set_xticklabels([])
     ax.set_yticklabels([])
-    
-    if LR_ind > 0 and len(axes) == 7:
-        LR_ind += 1
-    ax.set_theta_direction((-1)**LR_ind)
+    ax.set_theta_direction((-1)**(LR_ind+1))
     ax.set_theta_offset(np.pi / 2.0)
     ax.set_thetamin(0)
     ax.set_thetamax(180)
-
-    if len(axes) == 7 and ax is ax12:
+    
+    if ax is ax12: # set density axis to be full circle
         ax.set_thetamax(360)
 
-    
+# define max radial extent
 rmaxplotted = 5 * sdp['R']
+r = grid.r[:, 0]
+th = grid.theta[0, :]
 
 # plot 1: density 
 # whole circle: density
-r = grid.r[:, 0]
-th = grid.theta[0, :]
-th = np.append(th + np.pi, th)
+# extend th and rho over full circle
+the = np.append(th + np.pi, th)
 logrho_full_circle = np.append(logrho[:, ::-1], logrho, axis=1)
-the, re, logrhoe = get_full_polars(th, r, logrho_full_circle, 
+# cutoff coordinates at rmaxplotted
+the, re, logrhoe = get_full_polars(the, r, logrho_full_circle, 
                                            extend_theta=False, 
                                            rmaxplotted=rmaxplotted)
 the = np.append(the[-1] + 2*np.pi, the)
@@ -309,7 +301,7 @@ if savefigure is True:
 fintime = time.time()
 print('Fig. 1 took {:.2f}s'.format(fintime-starttime))
 
-
+"""
 #%% Fig 2 (with a5 plots, 2x2 grid)
 
 starttime = time.time()
@@ -1166,6 +1158,7 @@ fintime = time.time()
 print('Fig. 5 took {:.2f}s'.format(fintime-starttime))  
 
 #%% Timings
+"""
 
 tfinish = time.time()
 print('Total Time Taken:', tfinish-tstart)
