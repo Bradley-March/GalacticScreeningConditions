@@ -13,11 +13,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.patheffects as path_effects
 import time
-import os
-cwd = os.getcwd()
 
 # import user created modules
-from Solvers.fR2D import fR2DSolver # only needed to create grid 
+from Solvers.fR2D import fR2DSolver # needed to create grid structure
 import Packages.fR_functions as fRf
 import Packages.sym_functions as symf
 import Packages.galaxy_relations as galf
@@ -48,63 +46,54 @@ tstart = time.time()
 
 #%% Plotting functions
 
-def extend_polar_coords(th, r, fg):
-    # Takes polar coordinates and values and extendes them over the theta
-    # axis to prevent white space on plots. Assumes fg is periodic.
+def get_full_polars(th, r, fg, extend_theta=True, rmaxplotted=None):
+    """Takes polar coordinates (th, r) and value to be plotted (fg). 
+    extend_theta: Extends over the theta coordinate (assuming periodicity at 
+    boundary) to plot the full extent of the semi-circle.
+    rmaxplotted: Cuts off values at the max radius."""
     
+    # Convert coordinates to vectors (if grid-like)
     if th.ndim == 2:
-        # makes theta a vector (if grid-like)
         th = th[0, :]
-        
     if r.ndim == 2:
-        # makes r a vector (if grid-like)
         r = r[:, 0]
-    
-    the = np.append(th[-1] + np.pi, th)
-    the = np.append(the, th[0] - np.pi)
-    
-    re = r # only extended along th direction
-    
-    fge = np.hstack((fg[:, -1][:, None], fg, fg[:, 0][:, None]))
-    
-    return the, re, fge
-
-
-def get_cutoff_polar_coords(thg, rg, fg, rmaxplotted, extended=True):
-    # Gets cutoff and extened polar coordinates & values to plot
-    
-    if thg.ndim == 2:
-        # makes theta a vector (if grid-like)
-        thg = thg[0, :]
         
-    if rg.ndim == 2:
-        # makes r a vector (if grid-like)
-        rg = rg[:, 0]
+    # Add extra theta coordinate to plot over full semi-circle
+    if extend_theta:
+        th = np.hstack((th[-1] + np.pi, th, th[0] - np.pi))
+        fg = np.hstack((fg[:, -1][:, None], fg, fg[:, 0][:, None]))
         
-    mask = rg < rmaxplotted
-    rg = rg[mask]
-    fg = fg[mask, :]
-    
-    if extended:
-        thg, rg, fg = extend_polar_coords(thg, rg, fg)
-
-    return thg, rg, fg
+    # Cut off the radial extent at rmaxplotted
+    if rmaxplotted is not None:
+        mask = r < rmaxplotted
+        r = r[mask]
+        fg = fg[mask, :]
+        
+    return th, r, fg
 
 
 def bool_boundary_divider(data_bool, x, y, ax, linecolor='r', linewidth=1):
+    """Takes 2D boolean array and an axis with the same shape and plots a 
+    all dividing lines between 0 and 1 values."""
+    
     # assumes constant spacing in x, y
     dx = x[1] - x[0]
     dy = y[1] - y[0]
     
+    # find indices where there is a jump from 0-1 or 1-0
     horizontal_inds = np.where(abs(np.diff(data_bool, axis=0)) == 1)
     vertical_inds = np.where(abs(np.diff(data_bool, axis=1)) == 1)
     
+    # convert indices to line coordinates
     line_coords = []  
     for y_ind, x_ind in zip(horizontal_inds[0], horizontal_inds[1]):
-        line_coords.append([(x[x_ind]-dx/2, x[x_ind]+dx/2), (y[y_ind]+dy/2, y[y_ind]+dy/2)])
+        line_coords.append([(x[x_ind]-dx/2, x[x_ind]+dx/2), 
+                            (y[y_ind]+dy/2, y[y_ind]+dy/2)])
     for y_ind, x_ind in zip(vertical_inds[0], vertical_inds[1]):
-        line_coords.append([(x[x_ind]+dx/2, x[x_ind]+dx/2), (y[y_ind]-dy/2, y[y_ind]+dy/2)])
+        line_coords.append([(x[x_ind]+dx/2, x[x_ind]+dx/2), 
+                            (y[y_ind]-dy/2, y[y_ind]+dy/2)])
     
+    # plot dividing lines
     for line in line_coords:
         ax.plot(np.array(line[0]), np.array(line[1]), 
                 color=linecolor, linewidth=linewidth)
@@ -233,8 +222,9 @@ r = grid.r[:, 0]
 th = grid.theta[0, :]
 th = np.append(th + np.pi, th)
 logrho_full_circle = np.append(logrho[:, ::-1], logrho, axis=1)
-the, re, logrhoe = get_cutoff_polar_coords(th, r, logrho_full_circle, 
-                                           rmaxplotted, extended=False)
+the, re, logrhoe = get_full_polars(th, r, logrho_full_circle, 
+                                           extend_theta=False, 
+                                           rmaxplotted=rmaxplotted)
 the = np.append(the[-1] + 2*np.pi, the)
 logrhoe = np.append(logrhoe[:, -1].reshape(-1, 1), logrhoe, axis=1)
 im1 = ax12.pcolormesh(the, re/kpc, logrhoe, shading='auto')
@@ -267,18 +257,21 @@ temp_ax.annotate(r'5$R_\mathrm{disc}$', xy=(0, 0), xytext=(0.13, 0.6), rotation=
 
 # plot 3: fR solution
 # left: fR field profile
-th, r, usqe = get_cutoff_polar_coords(grid.theta, grid.r, fR/fR0, rmaxplotted)
+th, r, usqe = get_full_polars(grid.theta, grid.r, fR/fR0, 
+                                      rmaxplotted=rmaxplotted)
 im5 = ax5.pcolormesh(th, r/kpc, usqe, shading='auto')
 ims.append(im5)
 # right: curvature-density screening condition
-th, r, eome = get_cutoff_polar_coords(grid.theta, grid.r, eom, rmaxplotted)
+th, r, eome = get_full_polars(grid.theta, grid.r, eom, 
+                                      rmaxplotted=rmaxplotted)
 im6 = ax6.pcolormesh(th, r/kpc, eome, shading='auto', vmin=0, vmax=1)
 ims.append(im6)
 
 
 # plot 4: sym solution
 # left: sym field profile
-th, r, ue = get_cutoff_polar_coords(grid.theta, grid.r, u, rmaxplotted)
+th, r, ue = get_full_polars(grid.theta, grid.r, u, 
+                                    rmaxplotted=rmaxplotted)
 im7 = ax7.pcolormesh(th, r/kpc, ue, shading='auto', vmin=0, vmax=1)
 ims.append(im7)
 # right: sym threshold screening condition
@@ -580,8 +573,10 @@ logrho = np.log10(rhoratio)
 rmaxplotted = np.array([sdp['R'], 2*dmp['Rs']]) * 5 * 1.05
 
 # get extended coordinates/variables & package
-the, reL, logrhoeL = get_cutoff_polar_coords(grid.theta, grid.r, logrho, rmaxplotted[0])
-_, reR, logrhoeR = get_cutoff_polar_coords(grid.theta, grid.r, logrho, rmaxplotted[1])
+the, reL, logrhoeL = get_full_polars(grid.theta, grid.r, logrho, 
+                                             rmaxplotted=rmaxplotted[0])
+_, reR, logrhoeR = get_full_polars(grid.theta, grid.r, logrho, 
+                                           rmaxplotted=rmaxplotted[1])
 re = [reL, reR]
 logrhoe = [logrhoeL, logrhoeR]
 
