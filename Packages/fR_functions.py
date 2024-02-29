@@ -110,11 +110,20 @@ def delta_rho_term(drho):
     """Calculate delta rho term in the fR EoM."""
     return drho * 8 * np.pi * G / c**2 
 
+def get_curvature_density_ratio(fR, fR0, drho):
+    """Calculate the ratio of the two terms in the fR EoM. Expect this ratio 
+    to be 1 in the screened region and zero in the unscreened region."""
+    dR = delta_R(fR, fR0)
+    drho_term = delta_rho_term(drho)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        curvature_density_ratio = np.ma.masked_invalid(dR / drho_term)
+    return curvature_density_ratio
+
 #%% Calculate fR screening radius
 
 def calc_rs(fR, fR0, drho, grid=None, threshold=0.9, unscrthreshold=1e-3):
     """Calculate the position of the screening surface, using the ratio of the
-    two EoM terms. Unscreened solutions are determined by a threhsold on the
+    two EoM terms. Unscreened solutions are determined by a threshold on the
     central field value."""
     # check if fully unscreened
     if all(fR[0, :] / fR0 > unscrthreshold):
@@ -126,14 +135,9 @@ def calc_rs(fR, fR0, drho, grid=None, threshold=0.9, unscrthreshold=1e-3):
         grid = fR2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
 
     # determine the screened region (where lap(fR) = 0 --> dR / drho_term = 1)    
-    dR = delta_R(fR, fR0)
-    drho_term = delta_rho_term(drho)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        scr_reg = np.ma.masked_invalid(dR / drho_term)
-       
+    curvature_density_ratio = get_curvature_density_ratio(fR, fR0, drho)
     # find values above a threshold 
-    inds = np.argmin(scr_reg >= threshold, axis=0)
-
+    inds = np.argmin(curvature_density_ratio >= threshold, axis=0)
     # get screening radius
     rs = grid.r[inds, 0]
     return rs
