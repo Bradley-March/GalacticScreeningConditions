@@ -200,8 +200,8 @@ for LR_ind, ax in enumerate(axes):
     ax.set_thetamin(0)
     ax.set_thetamax(180)
     
-    if ax is ax12: # set density axis to be full circle
-        ax.set_thetamax(360)
+# set density axis to be full circle
+ax12.set_thetamax(360)
 
 # define max radial extent
 rmaxplotted = 5 * sdp['R']
@@ -210,67 +210,65 @@ th = grid.theta[0, :]
 
 # plot 1: density 
 # whole circle: density
+# cutoff at rmaxplotted
+the, re, logrhoe = get_full_polars(th, r, logrho, extend_theta=False, 
+                                   rmaxplotted=rmaxplotted)
 # extend th and rho over full circle
-the = np.append(th + np.pi, th)
-logrho_full_circle = np.append(logrho[:, ::-1], logrho, axis=1)
-# cutoff coordinates at rmaxplotted
-the, re, logrhoe = get_full_polars(the, r, logrho_full_circle, 
-                                           extend_theta=False, 
-                                           rmaxplotted=rmaxplotted)
-the = np.append(the[-1] + 2*np.pi, the)
-logrhoe = np.append(logrhoe[:, -1].reshape(-1, 1), logrhoe, axis=1)
+the = np.hstack((the[-1] + 2*np.pi, the + np.pi, the))
+logrhoe = np.hstack((logrhoe[:, -1][:, None], logrhoe[:, ::-1], logrhoe))
+# plot density and save im
 im1 = ax12.pcolormesh(the, re/kpc, logrhoe, shading='auto')
 ims.append(im1)
 
-
 # plot 2: grid coordinates
+N_plotted = 5 # every Nth grid line plotted
 # left: radial coordinates 
-# right: angular coordinates
 ax3.grid(True, axis='x')
-ax4.grid(True, axis='y')
-N_plotted = 5
-ax3.set_xticks(grid.theta[0, :][::N_plotted])
-ax4.set_yticks(grid.r[:, 0][::N_plotted]/kpc)
+ax3.set_xticks(th[::N_plotted])
 ax3.tick_params(grid_linewidth=.5, grid_color='black')
-ax4.tick_params(grid_linewidth=.5, grid_color='black')  
-# Add disc plane line
+# add disc plane line
 ax3.axvline(np.pi/2, linestyle='dashed', linewidth=2, color=cmap(0.3))
 temp_ax = fig.add_axes([0.47, 0.52, 0.2, 0.4])
 temp_ax.axis('off')
 temp_ax.annotate(r'Disc Plane', xy=(0, 0), xytext=(0, 0.45), color=cmap(0.3))
-
-# Add arrows to show 5R_disc 
+# right: angular coordinates
+ax4.grid(True, axis='y')
+ax4.set_yticks(r[::N_plotted]/kpc)
+ax4.tick_params(grid_linewidth=.5, grid_color='black')  
+# add arrows to show 5R_disc 
 temp_ax = fig.add_axes([0.87, 0.52, 0.2, 0.4])
 temp_ax.axis('off')
 temp_ax.annotate('', xy=(0.1, 1), xytext=(0.1, 0.45),
-                 arrowprops=dict(arrowstyle='<->', linewidth=2, color=cmap(0.7)))
-temp_ax.annotate(r'5$R_\mathrm{disc}$', xy=(0, 0), xytext=(0.13, 0.6), rotation=270)
-
+                 arrowprops=dict(arrowstyle='<->', linewidth=2, 
+                                 color=cmap(0.7)))
+temp_ax.annotate(r'5$R_\mathrm{disc}$', xy=(0, 0), xytext=(0.13, 0.6), 
+                 rotation=270)
 
 # plot 3: fR solution
 # left: fR field profile
-th, r, usqe = get_full_polars(grid.theta, grid.r, fR/fR0, 
-                                      rmaxplotted=rmaxplotted)
-im5 = ax5.pcolormesh(th, r/kpc, usqe, shading='auto')
+# get extended and cutoff polar coords
+the, re, usqe = get_full_polars(th, r, fR/fR0, extend_theta=True,
+                                rmaxplotted=rmaxplotted)
+im5 = ax5.pcolormesh(the, re/kpc, usqe, shading='auto')
 ims.append(im5)
 # right: curvature-density screening condition
-th, r, eome = get_full_polars(grid.theta, grid.r, eom, 
-                                      rmaxplotted=rmaxplotted)
-im6 = ax6.pcolormesh(th, r/kpc, eome, shading='auto', vmin=0, vmax=1)
+_, _, eome = get_full_polars(th, r, eom, extend_theta=True, 
+                             rmaxplotted=rmaxplotted)
+im6 = ax6.pcolormesh(the, re/kpc, eome, shading='auto', vmin=0, vmax=1)
 ims.append(im6)
-
 
 # plot 4: sym solution
 # left: sym field profile
-th, r, ue = get_full_polars(grid.theta, grid.r, u, 
-                                    rmaxplotted=rmaxplotted)
-im7 = ax7.pcolormesh(th, r/kpc, ue, shading='auto', vmin=0, vmax=1)
+the, re, ue = get_full_polars(th, r, u/u_inf, extend_theta=True,
+                            rmaxplotted=rmaxplotted)
+im7 = ax7.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=1)
 ims.append(im7)
 # right: sym threshold screening condition
-im8 = ax8.pcolormesh(th, r/kpc, ue, shading='auto', vmin=0, vmax=0.1)
+# add colourmap cutoff of 0.1 to show screening condition
+im8 = ax8.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=0.1)
 ims.append(im8)
 
-
+# plot colourbars
 clabels = [r"$\log_{10}(\rho\ /\ \bar{\rho})$", 
            r"$f_R\ /\ f_{R0}$",  r'$\delta R\ /\ 8\pi G\delta\rho/c^2$', 
            r"$\varphi\ /\ \varphi_\infty$", r"$\varphi\ /\ \varphi_\infty$"]
@@ -279,7 +277,6 @@ ticklocations = ['left', 'right']
 rotations = [90, 270]
 labelpads = [1, 12]
 extend = 'neither'
-
 for ind, cax in enumerate(caxes):
     im = ims[ind]
     label = clabels[ind]
@@ -287,11 +284,11 @@ for ind, cax in enumerate(caxes):
         ind += 1
     if cax is cax8:
         extend = 'max'
-    cbar = plt.colorbar(im, cax=cax, format=fmt, ticklocation=ticklocations[ind%2],
-                        extend=extend)
-    cbar.ax.set_ylabel(label, rotation=rotations[ind%2], labelpad=labelpads[ind%2])
+    cbar = plt.colorbar(im, cax=cax, format=fmt, 
+                        ticklocation=ticklocations[ind%2], extend=extend)
+    cbar.ax.set_ylabel(label, rotation=rotations[ind%2], 
+                       labelpad=labelpads[ind%2])
     
-
 plt.show()
 
 if savefigure is True:
@@ -301,7 +298,7 @@ if savefigure is True:
 fintime = time.time()
 print('Fig. 1 took {:.2f}s'.format(fintime-starttime))
 
-"""
+
 #%% Fig 2 (with a5 plots, 2x2 grid)
 
 starttime = time.time()
@@ -1158,7 +1155,6 @@ fintime = time.time()
 print('Fig. 5 took {:.2f}s'.format(fintime-starttime))  
 
 #%% Timings
-"""
 
 tfinish = time.time()
 print('Total Time Taken:', tfinish-tstart)
