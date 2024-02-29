@@ -41,6 +41,8 @@ r_min = galf.r_min
 r_max = galf.r_max
 # set up grid structure to use for figures 1-4
 grid = fR2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
+# and figure 5
+grid5 = fR2DSolver(N_r=N_r, N_th=int(101), r_min=r_min, r_max=r_max)
 
 #%% Plotting functions
 
@@ -478,13 +480,13 @@ def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5,
 
 #%% Fig 3 
 
-# Screening radius for a range of input parameters overplotted on density
-def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
-        logfR0_range=np.array([-6.3, -6.4, -6.5, -6.6, -7.0, -7.3, -7.6]),
-        logMs_range=np.array([-4.2, -4.6, -4.8, -4.9, -5.1, -5.8, -6.1, -6.3]),
-        logLc_range = np.array([-1.5, -0.9, -0.7, -0.6, -0.4, 0.3, 0.6, 0.9]),
-        savefigure=False):
-    """Plots figure 3 -- 2x2 figure with panels representing:
+def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1, 
+            logfR0_range=np.array([-6.3,-6.4,-6.5,-6.6,-7.0,-7.3,-7.6]),
+            logMs_range=np.array([-4.2,-4.6,-4.8,-4.9,-5.1,-5.8,-6.1,-6.3]),
+            logLc_range=np.array([-1.5,-0.9,-0.7,-0.6,-0.4,0.3,0.6,0.9]),
+            grid=grid, savefigure=False):
+    """Plots figure 3 -- Screening radius for a range of input parameters 
+    overplotted on density. 2x2 figure with panels representing:
     f(R) fR0 screening surfaces       ; density colourbar
     symmetron Ms screening surfaces   ; symmetron Lc screening surfaces"""
     starttime = time.time()
@@ -677,38 +679,28 @@ def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
 
 #%% Fig 4
 
-# Parameter space plot showing percent of mass screened against Mvir/fR0
-def plot_figure_4():
+def plot_figure_4(dMvir=0.1, dfR0=0.1, dMs=0.1, dLc=0.1, 
+                  logMs_fixed=-4.5, logLc_fixed=-1, grid=grid,
+                  fR_threshold=0.9, fR_unscrthreshold=1e-3, sym_threshold=0.1, 
+                  sym_unscrthreshold=1e-3, sym_unscrlapthreshold=1e-1, 
+                  savefigure=False):
+    """Plots figure 4 -- Parameter space plot showing percent of mass screened 
+    against logMvir and screening parameter. 3 panels for each screening param:
+    logfR0 ;
+    logMs (logLc fixed) ;
+    logLc (logMs fixed)
+    """
     starttime = time.time()
-    
-    ### input params ###
-    global_dX = 0.1
-    # Screening model parameters:
-    dfR0 = global_dX
-    dMs = global_dX
-    dLc = global_dX
-    logMs_fixed = -4.5
-    logLc_fixed = -1.0
+
+    # set up parameter ranges
+    logMvir_range = np.arange(10, 13.5+dMvir/2, dMvir)
     logfR0_range = np.arange(-8, -5+dfR0/2, dfR0)
     logMs_range = np.arange(-6.5, -3+dMs/2, dMs)
     logLc_range = np.arange(-3, 2+dLc/2, dLc) # Larger than 2 --> no SSB
-    # NFW profile input paramters:
-    dMvir = global_dX
-    logMvir_range = np.arange(10, 13.5+dMvir/2, dMvir)
-    # Screening radius parameters:
-    fR_threshold = 0.9
-    sym_threshold = 0.1
-    sym_unscrthreshold = 1e-3
-    sym_unscrlapthreshold = 1e-1
-    ####################
     
-    included_components = ['SD', 'DM']#, 'total']
+    included_components = ['SD', 'DM'] 
     
-    # set up grid structure
-    th_ind = grid.disc_idx
-    r = grid.r[:, th_ind]
-    
-    # calculate pms
+    # calculate fR0 pms
     fR_pms = {}
     fR_chi_pms = {}
     for comp in included_components:
@@ -730,7 +722,7 @@ def plot_figure_4():
                 fR_pms[comp][i, j] = mass_enclosed(grid, rhos[comp], rs) 
                 fR_chi_pms[comp][i, j] = mass_enclosed(grid, rhos[comp], rs_chi)
     
-                
+    # calculate Ms pms       
     Ms_pms = {}
     Ms_SSB_pms = {}
     for comp in included_components:
@@ -754,6 +746,7 @@ def plot_figure_4():
                 Ms_pms[comp][i, j] = mass_enclosed(grid, rhos[comp], rs) 
                 Ms_SSB_pms[comp][i, j] = mass_enclosed(grid, rhos[comp], rs_SSB) 
                 
+    # calculate Lc pms
     Lc_pms = {}
     Lc_SSB_pms = {}
     for comp in included_components:
@@ -782,8 +775,6 @@ def plot_figure_4():
     logfR0_crit_range = fRf.logfR0_crit_binary_screening(logMvir_extened)
     logMs_crit_range = symf.logMs_crit_binary_screening(logMvir_extened)
     
-    ### Plotting Fig 4 ###
-    
     # set shading style
     shading = 'nearest' # use 'gouraud' for interpolation
     Mvir_edgelen = 0
@@ -798,16 +789,20 @@ def plot_figure_4():
     
     cmap.set_under(cmap(0)) # corresponds to fully unscreened solutions
     
+    # set up figure
     asp = 1
     fig = plt.figure(figsize=(size, size/asp), constrained_layout=True)
     gs = fig.add_gridspec(nrows=3, ncols=len(included_components)+2, 
-                          height_ratios=[1, 1, 1], 
-                          width_ratios=[0.01]+[1]*len(included_components)+[0.1])
+                        height_ratios=[1, 1, 1], 
+                        width_ratios=[0.01]+[1]*len(included_components)+[0.1])
     
+    # define labels
     row_labels = [r'$f_R$', 'Symmetron']
+    xlabel = r'$\log_{10}(M_\mathrm{vir}/M_\odot)$'
     ylabels = [r'$\log_{10}(|f_{R0}|)$', 
                r'$\log_{10}(M_\mathrm{sym}/M_\mathrm{pl})$', 
                r'$\log_{10}(L_c/\mathrm{kpc})$']
+    
     # add subplots to the grid
     axes = []
     for i in range(gs.nrows):
@@ -820,7 +815,7 @@ def plot_figure_4():
             else:
                 ax.set_yticklabels([])
             if i == gs.nrows - 1:
-                ax.set_xlabel(r'$\log_{10}(M_\mathrm{vir}/M_\odot)$', labelpad=0)
+                ax.set_xlabel(xlabel, labelpad=0)
             else:
                 ax.set_xticklabels([])
             ax.set_xlim([logMvir_range.min() - Mvir_edgelen, 
@@ -861,16 +856,19 @@ def plot_figure_4():
                            shading=shading, vmin=0, vmax=100, cmap=cmap)
         # plot the line where >50% of mass is screened (true and approx)
         ax.contour(logMvir_range, logfR0_range, fR_pms[comp], levels=[50], 
-                   colors=line_colors[0], linestyles=line_styles[0], linewidths=line_width)
+                   colors=line_colors[0], linestyles=line_styles[0], 
+                   linewidths=line_width)
         ax.contour(logMvir_range, logfR0_range, fR_chi_pms[comp], levels=[50],
-                    colors=line_colors[2], linestyles=line_styles[2], linewidths=line_width)
+                    colors=line_colors[2], linestyles=line_styles[2], 
+                    linewidths=line_width)
         # plot the line where potential at virial radius > critical potential
-        ax.plot(logMvir_extened, logfR0_crit_range, 
-                color=line_colors[1], linestyle=line_styles[1], linewidth=line_width)
+        ax.plot(logMvir_extened, logfR0_crit_range, color=line_colors[1], 
+                linestyle=line_styles[1], linewidth=line_width)
         # plot the dividing line between fully screened and partial screened
         bool_boundary_divider((fR_pms[comp] < 0), logMvir_range, logfR0_range, 
                               ax, 'w', linewidth=1)
-        ax.set_ylim([logfR0_range.min() - fR_edgelen, logfR0_range.max() + fR_edgelen])
+        ax.set_ylim([logfR0_range.min() - fR_edgelen, 
+                     logfR0_range.max() + fR_edgelen])
         
         ax.set_title(column_titles[comp])
     
@@ -881,18 +879,20 @@ def plot_figure_4():
                       shading=shading, vmin=0, vmax=100, cmap=cmap)  
         # plot the line where >50% of mass is screened (true and approx)
         ax.contour(logMvir_range, logMs_range, Ms_pms[comp], levels=[50],
-                   colors=line_colors[0], linestyles=line_styles[0], linewidths=line_width)
+                   colors=line_colors[0], linestyles=line_styles[0], 
+                   linewidths=line_width)
         ax.contour(logMvir_range, logMs_range, Ms_SSB_pms[comp], levels=[50], 
-                   colors=line_colors[2], linestyles=line_styles[2], linewidths=line_width)
+                   colors=line_colors[2], linestyles=line_styles[2], 
+                   linewidths=line_width)
         # plot the line where potential at virial radius > critical potential
-        ax.plot(logMvir_extened, logMs_crit_range, 
-                color=line_colors[1], linestyle=line_styles[1], linewidth=line_width)
+        ax.plot(logMvir_extened, logMs_crit_range, color=line_colors[1], 
+                linestyle=line_styles[1], linewidth=line_width)
         # plot the dividing line between fully screened and partial screened
         bool_boundary_divider((Ms_pms[comp] < 0), logMvir_range, logMs_range, 
                               ax, 'w', linewidth=1)
-        ax.set_ylim([logMs_range.min() - Ms_edgelen, logMs_range.max() + Ms_edgelen])
-    
-    
+        ax.set_ylim([logMs_range.min() - Ms_edgelen, 
+                     logMs_range.max() + Ms_edgelen])
+        
         # sym Lc plot
         row_ind += 1
         ax = axes[row_ind, col_ind]
@@ -900,27 +900,29 @@ def plot_figure_4():
                       shading=shading, vmin=0, vmax=100, cmap=cmap)
         # plot the line where >50% of mass is screened (true and approx)
         ax.contour(logMvir_range, logLc_range, Lc_pms[comp], levels=[50],
-                   colors=line_colors[0], linestyles=line_styles[0], linewidths=line_width)
+                   colors=line_colors[0], linestyles=line_styles[0], 
+                   linewidths=line_width)
         ax.contour(logMvir_range, logLc_range, Lc_SSB_pms[comp], levels=[50], 
-                   colors=line_colors[2], linestyles=line_styles[2], linewidths=line_width)
+                   colors=line_colors[2], linestyles=line_styles[2], 
+                   linewidths=line_width)
         # plot the dividing line between fully screened and partial screened
         bool_boundary_divider((Lc_pms[comp] < 0), logMvir_range, logLc_range, 
                               ax, 'w', linewidth=1)
-        ax.set_ylim([logLc_range.min() - Lc_edgelen, logLc_range.max() + Lc_edgelen])
+        ax.set_ylim([logLc_range.min() - Lc_edgelen, 
+                     logLc_range.max() + Lc_edgelen])
     
     # add a horizontal colorbar
     fig.colorbar(im, cax=cbar_ax, orientation='vertical', ticklocation='right')
     cbar_ax.set_ylabel('Screened Mass Fraction [\%]', rotation=270,
                        fontsize=plt.rcParams['axes.titlesize'], labelpad=10)
     
-    ### Adding labels to f(R) DM plot ###
+    # add labels to f(R) DM plot 
     ax = axes[0][1]
     rot_deg = 31
     rot_rad = rot_deg * np.pi / 180
     srot = np.sin(rot_rad)
     crot = np.cos(rot_rad)
     labelargs = dict(rotation=rot_deg, fontsize=11, fontweight='bold')
-    
     # fully screened region
     label = r"$\mathbf{Fully\ Unscreened}$"
     ax.annotate(label, (10.25, -6.55), c='w', **labelargs)
@@ -932,15 +934,12 @@ def plot_figure_4():
     arrargs = dict(c='w', arrowprops=dict(arrowstyle="->", ec='w', lw=1))
     ax.annotate("", (x1 - L * srot, y1 + L * crot), (x1, y1), **arrargs)
     ax.annotate("", (x2 - L * srot, y2 + L * crot), (x2, y2), **arrargs)
-    
     # 50% screened line
     label = r"$\mathbf{50\%\ Screened}$"
     ax.annotate(label, (11.7, -7.7), c='skyblue', **labelargs)
-    
     # binary line
     label = r"$\mathbf{Binary\ Threshold}$"
     ax.annotate(label, (11.2, -7.2), c='grey', **labelargs)
-    
     # 50% approximate line
     label = r"$\mathbf{50\%\ Screened;\ r_s\ Approx.}$"
     ax.annotate(label, (10.1, -7.55), c='grey', **labelargs)
@@ -949,7 +948,6 @@ def plot_figure_4():
     L = 0.6
     arrargs = dict(c='w', arrowprops=dict(arrowstyle="->", ec='grey', lw=1.2))
     ax.annotate("", (x1 + L * srot, y1 - L * crot), (x1, y1), **arrargs)
-    ### ###
     
     fig.get_layout_engine().set(h_pad=-1)
     plt.show()
@@ -964,38 +962,29 @@ def plot_figure_4():
 #%% Fig 5
 # plot showing the screening radius in a the MW for a range of fR0 / sym params
 
-def plot_figure_5():
+def plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
+                  fR_threshold=0.9, fR_unscrthreshold=1e-3, sym_threshold=0.1,
+                  sym_unscrthreshold=1e-3, sym_unscrlapthreshold = 1e-1):
     starttime = time.time()
     
-    ### input params ###
-    # Screening model parameters:
-    dfR0 = 0.05
-    dMs, dLc = 0.1, 0.1
+    # set up parameter ranges
     logfR0_range = np.arange(-8, -6.2, dfR0)
-    logfR0_range = np.append(logfR0_range, np.arange(-6.2, -5.8, 0.01))
-    logfR0_range = np.append(logfR0_range, np.arange(-5.8, -5+0.01, dfR0))
-    logfR0_range = logfR0_range
+    logfR0_range = np.append(logfR0_range, np.arange(-6.2, -5.8, dfR0_fine))
+    logfR0_range = np.append(logfR0_range, np.arange(-5.8, -5+dfR0/2, dfR0))
     logMs_range = np.arange(-6.5, -3+0.01, dMs)
     logLc_range = np.arange(-3, 3+0.01, dLc)
-    # NFW profile input paramters:
-    Mvir = 1.5e12 * M_sun   # MW mass
+    # set up MW mass
+    Mvir = 1.5e12 * M_sun
     logMvir = np.log10(Mvir / M_sun)
-    logMvir = np.log10(1.5e12)
-    # Screening condition inputs:
-    fR_threshold = 0.9
-    fR_unscrthreshold = 1e-3
-    sym_threshold = 0.1
-    sym_unscrthreshold = 1e-3
-    sym_unscrlapthreshold = 1e-1
-    ####################
     
-    # set up grid (lower resolution in theta since only plotting along disc plane)
+    # set up grid (lower res in theta since we only plot along disc plane)
     grid5 = fR2DSolver(N_r=N_r, N_th=int(101), r_min=r_min, r_max=r_max)
     th_ind = grid5.disc_idx
-    r = grid5.r[:, th_ind]
     
+    # calculate total density
     drho = galf.get_densities(Mvir, grid5.r, grid5.theta, total=True)['total']
     
+    # calculate fR screening radius (true and approx)
     rs = {}
     rs_approx = {}
     for logfR0 in logfR0_range:
@@ -1003,9 +992,10 @@ def plot_figure_5():
                                 threshold=fR_threshold, 
                                 unscrthreshold=fR_unscrthreshold)
         if isinstance(rs[logfR0], np.ndarray):
-            rs[logfR0] = rs[logfR0][th_ind] / kpc   
+            rs[logfR0] = rs[logfR0][th_ind] / kpc # take disc axis value
         rs_approx[logfR0] = fRf.get_rs_chi(logfR0, drho) / kpc
     
+    # calculate symmetron screening radius (true and approx)
     rss = np.zeros([logMs_range.size, logLc_range.size])
     rss_approx = np.zeros_like(rss)
     for i, logMs in enumerate(logMs_range):
@@ -1016,7 +1006,7 @@ def plot_figure_5():
                                     unscrlapthreshold=sym_unscrlapthreshold)
             temp_approx = symf.get_rho_SSB_rs(logMs, logLc, drho)
             if isinstance(temp_rss, np.ndarray):
-                rss[i, j] = temp_rss[th_ind] / kpc
+                rss[i, j] = temp_rss[th_ind] / kpc # take disc axis value
             else:
                 rss[i, j] = temp_rss
             if isinstance(temp_approx, np.ndarray):
@@ -1024,11 +1014,12 @@ def plot_figure_5():
             else:
                 rss_approx[i, j] = temp_approx
                 
+    # calculate critical  binary screening model parameters
     logMs_crit = symf.logMs_crit_binary_screening(logMvir)
     logfR0_crit = fRf.logfR0_crit_binary_screening(logMvir)
     
+    # set up figure and formatting
     linecolor = 'skyblue'
-    linewidth = 2
     fontsize = 11
     asp = 1
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(size, size/asp), 
@@ -1120,7 +1111,7 @@ def plot_figure_5():
     divider = make_axes_locatable(ax2)
     cax = divider.append_axes('right', size='5%', pad=0.0)
     cbar = plt.colorbar(im, cax=cax, extend='max')
-    # Formatting
+    # formatting
     ax2.set_xlabel('$\log_{10} (L_c / \mathrm{kpc})$')
     ax2.set_ylabel('$\log_{10} (M_\mathrm{sym} / M_\mathrm{pl})$')
     cbar.ax.set_ylabel(r"$r_s\ /\ \mathrm{kpc}$")
@@ -1142,25 +1133,30 @@ def plot_figure_5():
 if __name__ == '__main__':
     tstart = time.time()
     
-    """
     plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
                   N_stellar_scale_length_plotted=5, N_grid_lines_plotted=5,
                   savefigure=False)
-    #"""
     
-    """
     plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5, 
-                      grid=grid, fR_threshold = 0.9, fR_unscrthreshold = 1e-3,
-                      sym_threshold = 0.1, sym_unscrfieldthreshold = 1e-3,
-                      sym_unscrlapthreshold = 1e-1)
-    #"""
+                  grid=grid, fR_threshold = 0.9, fR_unscrthreshold = 1e-3,
+                  sym_threshold = 0.1, sym_unscrfieldthreshold = 1e-3,
+                  sym_unscrlapthreshold = 1e-1)
     
-    #"""
     plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
-            logfR0_range=np.array([-6.3, -6.4, -6.5, -6.6, -7.0, -7.3, -7.6]),
-            logMs_range=np.array([-4.2, -4.6, -4.8, -4.9, -5.1, -5.8, -6.1, -6.3]),
-            logLc_range = np.array([-1.5, -0.9, -0.7, -0.6, -0.4, 0.3, 0.6, 0.9]),
-            savefigure=False)
-    #"""
+            logfR0_range=np.array([-6.3,-6.4,-6.5,-6.6,-7.0,-7.3,-7.6]),
+            logMs_range=np.array([-4.2,-4.6,-4.8,-4.9,-5.1,-5.8,-6.1,-6.3]),
+            logLc_range = np.array([-1.5,-0.9,-0.7,-0.6,-0.4,0.3,0.6,0.9]),
+            grid=grid, savefigure=False)
+    
+    plot_figure_4(dMvir=0.1, dfR0=0.1, dMs=0.1, dLc=0.1, 
+                  logMs_fixed=-4.5, logLc_fixed=-1, grid=grid,
+                  fR_threshold=0.9, fR_unscrthreshold=1e-3, 
+                  sym_threshold=0.1, sym_unscrthreshold=1e-3, 
+                  sym_unscrlapthreshold=1e-1, savefigure=False)
+
+    plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
+                  fR_threshold=0.9, fR_unscrthreshold=1e-3, sym_threshold=0.1,
+                  sym_unscrthreshold=1e-3, sym_unscrlapthreshold = 1e-1)
+    
     tfinish = time.time()
     print('Total Time Taken:', tfinish-tstart)
