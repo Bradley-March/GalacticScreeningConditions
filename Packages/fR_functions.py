@@ -115,8 +115,8 @@ def get_curvature_density_ratio(fR, fR0, drho):
     to be 1 in the screened region and zero in the unscreened region."""
     dR = delta_R(fR, fR0)
     drho_term = delta_rho_term(drho)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        curvature_density_ratio = np.ma.masked_invalid(dR / drho_term)
+    # calculate ratio, masking invalid numbers from division by zero
+    curvature_density_ratio = np.ma.divide(dR, drho_term)
     return curvature_density_ratio
 
 #%% Calculate fR screening radius
