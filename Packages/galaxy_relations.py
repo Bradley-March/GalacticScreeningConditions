@@ -5,9 +5,8 @@ Author: Bradley March
 """
 #%% Preamble 
 import numpy as np
-import matplotlib.pyplot as plt
 from pynverse import inversefunc # https://pypi.org/project/pynverse/ (0.1.4.6)
-from constants import pc, kpc, Mpc, h, M_sun, rho_c, rho_m
+from constants import pc, kpc, Mpc, h, M_sun, rho_c
 
 # define galaxy profile constants
 r_min, r_max = 50 * pc, 10 * Mpc # inner/outer grid cutoff
