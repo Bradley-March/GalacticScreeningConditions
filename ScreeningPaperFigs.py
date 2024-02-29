@@ -42,8 +42,6 @@ r_max = galf.r_max
 # set up grid structure to use for figures 1-4
 grid = fR2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
 
-tstart = time.time()
-
 #%% Plotting functions
 
 def get_full_polars(th, r, fg, extend_theta=True, rmaxplotted=None):
@@ -98,345 +96,281 @@ def bool_boundary_divider(data_bool, x, y, ax, linecolor='r', linewidth=1):
         ax.plot(np.array(line[0]), np.array(line[1]), 
                 color=linecolor, linewidth=linewidth)
 
-
 #%% Fig 1
-# log density                        ; grid coordinates
-# fR field & curvature-density param ; sym field & restricted sym field
-starttime = time.time()
 
-### input params ###
-# Screening model parameters:
-logfR0 = -6.4
-logMs = -4.5
-logLc = -1.
-# NFW profile input paramters:
-logMvir = 11.5
-####################
+def plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
+                  N_stellar_scale_length_plotted=5, N_grid_lines_plotted=5):
+    """Plots figure 1 -- 2x2 figure with panels representing:
+    log density                        ; grid coordinates
+    fR field & curvature-density param ; sym field & restricted sym field"""
+    starttime = time.time()
 
-# derive model parameters
-Mvir = 10**logMvir * M_sun
-fR0 = - 10**logfR0
-Lc = 10**(logLc) * kpc
-Ms = 10**(logMs)
-
-# get dark matter / stellar disc paramters
-dmp = galf.get_dark_matter_parameters(Mvir)
-sdp = galf.get_stellar_disc_parameters(Mvir)
-drho = galf.get_densities(Mvir, grid.r, grid.theta, 
-                          splashback_cutoff=True, total=True)['total']
-
-# load fR/sym solution 
-fR = fRf.load_solution(logfR0, logMvir, N_r, N_th)
-u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
-
-# calculate fR EoM term
-dR = fRf.delta_R(fR, fR0)
-drho_term = fRf.delta_rho_term(drho)
-with np.errstate(divide='ignore'):
-    logrho = np.log10(drho / rho_m)
-    eom = dR / drho_term
-eom[eom == np.inf] = 0
-
-# set up figure
-asp = 5/3
-fig = plt.figure(figsize=(size, size / asp))
-
-# panel sizes
-dX = 0.25
-dY = 0.4
-# panel positions
-X1L, X2L = 0.0755, 0.559
-semicircle_width = 0.12235
-X1R, X2R = X1L + semicircle_width, X2L + semicircle_width
-Y2 = 0.02
-Y1 = Y2 + dY + 0.1 
-# create axes
-ax12 = fig.add_axes([X1L + 0.063, Y1, dX, dY], projection='polar')
-ax3 = fig.add_axes([X2L, Y1, dX, dY], projection='polar')
-ax4 = fig.add_axes([X2R, Y1, dX, dY], projection='polar')
-ax5 = fig.add_axes([X1L, Y2, dX, dY], projection='polar')
-ax6 = fig.add_axes([X1R, Y2, dX, dY], projection='polar')
-ax7 = fig.add_axes([X2L, Y2, dX, dY], projection='polar')
-ax8 = fig.add_axes([X2R, Y2, dX, dY], projection='polar')
-axes = [ax12, ax3, ax4, ax5, ax6, ax7, ax8]
-
-# colourbar positions and axes
-fullcircle_width = 0.28
-cX1L, cX2L = 0.106, 0.59
-cX1R, cX2R = cX1L + fullcircle_width, cX2L + fullcircle_width
-cdX, cdY = 0.03, 0.39
-cY1, cY2 = Y1 + (dY-cdY)/2, Y2 + (dY-cdY)/2
-cax1 = fig.add_axes([cX1L, cY1, cdX, cdY])
-cax5 = fig.add_axes([cX1L, cY2, cdX, cdY])
-cax6 = fig.add_axes([cX1R, cY2, cdX, cdY])
-cax7 = fig.add_axes([cX2L, cY2, cdX, cdY])
-cax8 = fig.add_axes([cX2R, cY2, cdX, cdY])
-caxes = [cax1, cax5, cax6, cax7, cax8]
-ims = [] # to append images for colourbar input
-
-# title positions and axes
-tX1, tX2 = 0, 0.5
-tY1, tY2 = 0.95, 0.45
-tdX, tdY = 0.5, 0.0
-tax1 = fig.add_axes([tX1, tY1, tdX, tdY])
-tax2 = fig.add_axes([tX2, tY1, tdX, tdY])
-tax3 = fig.add_axes([tX1, tY2, tdX, tdY])
-tax4 = fig.add_axes([tX2, tY2, tdX, tdY])
-taxes = [tax1, tax2, tax3, tax4]
-titles = ['Density Profile', 'Coordinate Grid',
-          r'$f(R)$ Solution', 'Symmetron Solution']
-# remove axis from boxes and add text
-for ind, ax in enumerate(taxes):
-    ax.axis('off')
-    ax.text(0.5, 0.5, s=titles[ind], ha='center')
-
-# set general properties for panel axes
-for LR_ind, ax in enumerate(axes):
-    ax.grid(False)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_theta_direction((-1)**(LR_ind+1))
-    ax.set_theta_offset(np.pi / 2.0)
-    ax.set_thetamin(0)
-    ax.set_thetamax(180)
+    # derive model parameters
+    Mvir = 10**logMvir * M_sun
+    fR0 = - 10**logfR0
     
-# set density axis to be full circle
-ax12.set_thetamax(360)
-
-# define max radial extent
-rmaxplotted = 5 * sdp['R']
-r = grid.r[:, 0]
-th = grid.theta[0, :]
-
-# plot 1: density 
-# whole circle: density
-# cutoff at rmaxplotted
-the, re, logrhoe = get_full_polars(th, r, logrho, extend_theta=False, 
-                                   rmaxplotted=rmaxplotted)
-# extend th and rho over full circle
-the = np.hstack((the[-1] + 2*np.pi, the + np.pi, the))
-logrhoe = np.hstack((logrhoe[:, -1][:, None], logrhoe[:, ::-1], logrhoe))
-# plot density and save im
-im1 = ax12.pcolormesh(the, re/kpc, logrhoe, shading='auto')
-ims.append(im1)
-
-# plot 2: grid coordinates
-N_plotted = 5 # every Nth grid line plotted
-# left: radial coordinates 
-ax3.grid(True, axis='x')
-ax3.set_xticks(th[::N_plotted])
-ax3.tick_params(grid_linewidth=.5, grid_color='black')
-# add disc plane line
-ax3.axvline(np.pi/2, linestyle='dashed', linewidth=2, color=cmap(0.3))
-temp_ax = fig.add_axes([0.47, 0.52, 0.2, 0.4])
-temp_ax.axis('off')
-temp_ax.annotate(r'Disc Plane', xy=(0, 0), xytext=(0, 0.45), color=cmap(0.3))
-# right: angular coordinates
-ax4.grid(True, axis='y')
-ax4.set_yticks(r[::N_plotted]/kpc)
-ax4.tick_params(grid_linewidth=.5, grid_color='black')  
-# add arrows to show 5R_disc 
-temp_ax = fig.add_axes([0.87, 0.52, 0.2, 0.4])
-temp_ax.axis('off')
-temp_ax.annotate('', xy=(0.1, 1), xytext=(0.1, 0.45),
-                 arrowprops=dict(arrowstyle='<->', linewidth=2, 
-                                 color=cmap(0.7)))
-temp_ax.annotate(r'5$R_\mathrm{disc}$', xy=(0, 0), xytext=(0.13, 0.6), 
-                 rotation=270)
-
-# plot 3: fR solution
-# left: fR field profile
-# get extended and cutoff polar coords
-the, re, usqe = get_full_polars(th, r, fR/fR0, extend_theta=True,
+    # get non-background density
+    drho = galf.get_densities(Mvir, grid.r, grid.theta, 
+                              splashback_cutoff=True, total=True)['total']
+    
+    # load fR/sym solution 
+    fR = fRf.load_solution(logfR0, logMvir, N_r, N_th)
+    u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
+    
+    # calculate fR EoM term
+    dR = fRf.delta_R(fR, fR0)
+    drho_term = fRf.delta_rho_term(drho)
+    with np.errstate(divide='ignore'):
+        logrho = np.log10(drho / rho_m)
+        eom = dR / drho_term
+    eom[eom == np.inf] = 0
+    
+    # set up figure
+    asp = 5/3
+    fig = plt.figure(figsize=(size, size / asp))
+    
+    # panel sizes
+    dX = 0.25
+    dY = 0.4
+    # panel positions
+    X1L, X2L = 0.0755, 0.559
+    semicircle_width = 0.12235
+    X1R, X2R = X1L + semicircle_width, X2L + semicircle_width
+    Y2 = 0.02
+    Y1 = Y2 + dY + 0.1 
+    # create axes
+    ax12 = fig.add_axes([X1L + 0.063, Y1, dX, dY], projection='polar')
+    ax3 = fig.add_axes([X2L, Y1, dX, dY], projection='polar')
+    ax4 = fig.add_axes([X2R, Y1, dX, dY], projection='polar')
+    ax5 = fig.add_axes([X1L, Y2, dX, dY], projection='polar')
+    ax6 = fig.add_axes([X1R, Y2, dX, dY], projection='polar')
+    ax7 = fig.add_axes([X2L, Y2, dX, dY], projection='polar')
+    ax8 = fig.add_axes([X2R, Y2, dX, dY], projection='polar')
+    axes = [ax12, ax3, ax4, ax5, ax6, ax7, ax8]
+    
+    # colourbar positions and axes
+    fullcircle_width = 0.28
+    cX1L, cX2L = 0.106, 0.59
+    cX1R, cX2R = cX1L + fullcircle_width, cX2L + fullcircle_width
+    cdX, cdY = 0.03, 0.39
+    cY1, cY2 = Y1 + (dY-cdY)/2, Y2 + (dY-cdY)/2
+    cax1 = fig.add_axes([cX1L, cY1, cdX, cdY])
+    cax5 = fig.add_axes([cX1L, cY2, cdX, cdY])
+    cax6 = fig.add_axes([cX1R, cY2, cdX, cdY])
+    cax7 = fig.add_axes([cX2L, cY2, cdX, cdY])
+    cax8 = fig.add_axes([cX2R, cY2, cdX, cdY])
+    caxes = [cax1, cax5, cax6, cax7, cax8]
+    ims = [] # to append images for colourbar input
+    
+    # title positions and axes
+    tX1, tX2 = 0, 0.5
+    tY1, tY2 = 0.95, 0.45
+    tdX, tdY = 0.5, 0.0
+    tax1 = fig.add_axes([tX1, tY1, tdX, tdY])
+    tax2 = fig.add_axes([tX2, tY1, tdX, tdY])
+    tax3 = fig.add_axes([tX1, tY2, tdX, tdY])
+    tax4 = fig.add_axes([tX2, tY2, tdX, tdY])
+    taxes = [tax1, tax2, tax3, tax4]
+    titles = ['Density Profile', 'Coordinate Grid',
+              r'$f(R)$ Solution', 'Symmetron Solution']
+    # remove axis from boxes and add text
+    for ind, ax in enumerate(taxes):
+        ax.axis('off')
+        ax.text(0.5, 0.5, s=titles[ind], ha='center')
+    
+    # set general properties for panel axes
+    for LR_ind, ax in enumerate(axes):
+        ax.grid(False)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_theta_direction((-1)**(LR_ind+1))
+        ax.set_theta_offset(np.pi / 2.0)
+        ax.set_thetamin(0)
+        ax.set_thetamax(180)
+        
+    # set density axis to be full circle
+    ax12.set_thetamax(360)
+    
+    # define max radial extent
+    stellar_scale_length = galf.get_stellar_disc_parameters(Mvir)['R']
+    rmaxplotted = N_stellar_scale_length_plotted * stellar_scale_length
+    
+    r = grid.r[:, 0]
+    th = grid.theta[0, :]
+    
+    # plot 1: density 
+    # whole circle: density
+    # cutoff at rmaxplotted
+    the, re, logrhoe = get_full_polars(th, r, logrho, extend_theta=False, 
+                                       rmaxplotted=rmaxplotted)
+    # extend th and rho over full circle
+    the = np.hstack((the[-1] + 2*np.pi, the + np.pi, the))
+    logrhoe = np.hstack((logrhoe[:, -1][:, None], logrhoe[:, ::-1], logrhoe))
+    # plot density and save im
+    im1 = ax12.pcolormesh(the, re/kpc, logrhoe, shading='auto')
+    ims.append(im1)
+    
+    # plot 2: grid coordinates
+    # left: radial coordinates 
+    ax3.grid(True, axis='x')
+    ax3.set_xticks(th[::N_grid_lines_plotted])
+    ax3.tick_params(grid_linewidth=.5, grid_color='black')
+    # add disc plane line
+    ax3.axvline(np.pi/2, linestyle='dashed', linewidth=2, color=cmap(0.3))
+    temp_ax = fig.add_axes([0.47, 0.52, 0.2, 0.4])
+    temp_ax.axis('off')
+    temp_ax.annotate(r'Disc Plane', xy=(0, 0), xytext=(0, 0.45), 
+                     color=cmap(0.3))
+    # right: angular coordinates
+    ax4.grid(True, axis='y')
+    ax4.set_yticks(r[::N_grid_lines_plotted]/kpc)
+    ax4.tick_params(grid_linewidth=.5, grid_color='black')  
+    # add arrows to show 5R_disc 
+    temp_ax = fig.add_axes([0.87, 0.52, 0.2, 0.4])
+    temp_ax.axis('off')
+    temp_ax.annotate('', xy=(0.1, 1), xytext=(0.1, 0.45),
+                     arrowprops=dict(arrowstyle='<->', linewidth=2, 
+                                     color=cmap(0.7)))
+    temp_ax.annotate(r'5$R_\mathrm{disc}$', xy=(0, 0), xytext=(0.13, 0.6), 
+                     rotation=270)
+    
+    # plot 3: fR solution
+    # left: fR field profile
+    # get extended and cutoff polar coords
+    the, re, usqe = get_full_polars(th, r, fR/fR0, extend_theta=True,
+                                    rmaxplotted=rmaxplotted)
+    im5 = ax5.pcolormesh(the, re/kpc, usqe, shading='auto')
+    ims.append(im5)
+    # right: curvature-density screening condition
+    _, _, eome = get_full_polars(th, r, eom, extend_theta=True, 
+                                 rmaxplotted=rmaxplotted)
+    im6 = ax6.pcolormesh(the, re/kpc, eome, shading='auto', vmin=0, vmax=1)
+    ims.append(im6)
+    
+    # plot 4: sym solution
+    # left: sym field profile
+    the, re, ue = get_full_polars(th, r, u/u_inf, extend_theta=True,
                                 rmaxplotted=rmaxplotted)
-im5 = ax5.pcolormesh(the, re/kpc, usqe, shading='auto')
-ims.append(im5)
-# right: curvature-density screening condition
-_, _, eome = get_full_polars(th, r, eom, extend_theta=True, 
-                             rmaxplotted=rmaxplotted)
-im6 = ax6.pcolormesh(the, re/kpc, eome, shading='auto', vmin=0, vmax=1)
-ims.append(im6)
-
-# plot 4: sym solution
-# left: sym field profile
-the, re, ue = get_full_polars(th, r, u/u_inf, extend_theta=True,
-                            rmaxplotted=rmaxplotted)
-im7 = ax7.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=1)
-ims.append(im7)
-# right: sym threshold screening condition
-# add colourmap cutoff of 0.1 to show screening condition
-im8 = ax8.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=0.1)
-ims.append(im8)
-
-# plot colourbars
-clabels = [r"$\log_{10}(\rho\ /\ \bar{\rho})$", 
-           r"$f_R\ /\ f_{R0}$",  r'$\delta R\ /\ 8\pi G\delta\rho/c^2$', 
-           r"$\varphi\ /\ \varphi_\infty$", r"$\varphi\ /\ \varphi_\infty$"]
-fmt = "%4.1g" 
-ticklocations = ['left', 'right']
-rotations = [90, 270]
-labelpads = [1, 12]
-extend = 'neither'
-for ind, cax in enumerate(caxes):
-    im = ims[ind]
-    label = clabels[ind]
-    if cax is not cax1:
-        ind += 1
-    if cax is cax8:
-        extend = 'max'
-    cbar = plt.colorbar(im, cax=cax, format=fmt, 
-                        ticklocation=ticklocations[ind%2], extend=extend)
-    cbar.ax.set_ylabel(label, rotation=rotations[ind%2], 
-                       labelpad=labelpads[ind%2])
+    im7 = ax7.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=1)
+    ims.append(im7)
+    # right: sym threshold screening condition
+    # add colourmap cutoff of 0.1 to show screening condition
+    im8 = ax8.pcolormesh(the, re/kpc, ue, shading='auto', vmin=0, vmax=0.1)
+    ims.append(im8)
     
-plt.show()
-
-if savefigure is True:
-    plt.savefig('Fig_1._rho,_fR,_sym_and_scr_conds_new.png', dpi=dpi)
-    print('Fig 1. saved!')
-
-fintime = time.time()
-print('Fig. 1 took {:.2f}s'.format(fintime-starttime))
-
+    # plot colourbars
+    clabels = [r"$\log_{10}(\rho\ /\ \bar{\rho})$", 
+               r"$f_R\ /\ f_{R0}$",  
+               r'$\delta R\ /\ 8\pi G\delta\rho/c^2$', 
+               r"$\varphi\ /\ \varphi_\infty$", 
+               r"$\varphi\ /\ \varphi_\infty$"]
+    fmt = "%4.1g" 
+    ticklocations = ['left', 'right']
+    rotations = [90, 270]
+    labelpads = [1, 12]
+    extend = 'neither'
+    for ind, cax in enumerate(caxes):
+        im = ims[ind]
+        label = clabels[ind]
+        if cax is not cax1:
+            ind += 1
+        if cax is cax8:
+            extend = 'max'
+        cbar = plt.colorbar(im, cax=cax, format=fmt, 
+                            ticklocation=ticklocations[ind%2], extend=extend)
+        cbar.ax.set_ylabel(label, rotation=rotations[ind%2], 
+                           labelpad=labelpads[ind%2])
+        
+    plt.show()
+    
+    if savefigure is True:
+        plt.savefig('Fig_1._rho,_fR,_sym_and_scr_conds_new.png', dpi=dpi)
+        print('Fig 1. saved!')
+    
+    fintime = time.time()
+    print('Fig. 1 took {:.2f}s'.format(fintime-starttime))
 
 #%% Fig 2 (with a5 plots, 2x2 grid)
 
-starttime = time.time()
+def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5, 
+                  grid=grid, fR_threshold=0.9, fR_unscrthreshold=1e-3,
+                  sym_threshold=0.1, sym_unscrfieldthreshold=1e-3,
+                  sym_unscrlapthreshold=1e-1):
+    """Plots figure 2 -- 2x2 figure with panels representing:
+    f(R) screening condition        ; f(R) fifth force
+    symmetron screening condition   ; symmetron fifth force"""
 
-### input params ###
-# f(R) parameters:
-dfR0, fR_dMvir = 0.2, 0.2
-logfR0_range = np.arange(-8, -5+dfR0/2, dfR0)
-fR_logMvir_range = np.arange(10, 13.5+fR_dMvir/2, fR_dMvir)
-# Symmeton parameters:
-dMs, dLc, sym_dMvir =  0.5, 0.5, 0.5
-logMs_range = np.arange(-6.5, -3+dMs/2, dMs)
-logLc_range = np.arange(-3, 3+dLc/2, dLc)
-sym_logMvir_range = np.arange(10, 13.5+sym_dMvir/2, sym_dMvir)
-# Screening inputs:
-fR_threshold = 0.9
-fR_unscrthreshold = 1e-3
-sym_threshold = 0.1
-sym_unscrfieldthreshold = 1e-3
-sym_unscrlapthreshold = 1e-1
-####################
-
-# set up grid structure
-th_ind = grid.disc_idx
-r = grid.r[:, th_ind]
-
-# set up empty fR/sym arrays
-fR_rs_all = np.zeros([fR_logMvir_range.size, logfR0_range.size])
-fR_EoM_all = np.zeros([fR_logMvir_range.size, logfR0_range.size, N_r])
-fR_a5_all = np.zeros_like(fR_EoM_all)
-
-sym_rs_all = np.zeros([sym_logMvir_range.size, logMs_range.size, 
-                       logLc_range.size])
-sym_field_all = np.zeros([sym_logMvir_range.size, logMs_range.size, 
-                          logLc_range.size, N_r])
-sym_a5_all = np.zeros_like(sym_field_all)
-
-# Collect fR solutions
-for i, logMvir in enumerate(fR_logMvir_range):
-    Mvir = M_sun * 10**logMvir
-    for j, logfR0 in enumerate(logfR0_range):
-        fR0 = -10**logfR0
-        
-        # get rs
-        rs = fRf.get_rs(logfR0, logMvir, N_r, N_th, threshold=fR_threshold,
-                        unscrthreshold=fR_unscrthreshold)
-        # check if fully unscreened
-        if isinstance(rs, int):
-            fR_rs_all[i, j] = rs
-            continue
-        fR_rs_all[i, j] = rs[th_ind]
-        
-        # load fR field
-        fR = fRf.load_solution(logfR0, logMvir, N_r, N_th)
-        
-        # get fR a5
-        a5 = fRf.get_a5(fR, fR0, magnitude=True)[:, th_ind]
-        fR_a5_all[i, j] = np.abs(a5) / np.abs(a5).max()
-        
-        # get fR curvature-density ratio
-        drho = galf.get_densities(Mvir, grid.r, grid.theta, total=True,
-                                  splashback_cutoff=True)['total'][:, th_ind]
-        dR = fRf.delta_R(fR[:, th_ind], fR0)
-        drho_term = fRf.delta_rho_term(drho)
-        with np.errstate(divide='ignore', invalid='ignore'):
-            EoM = np.ma.masked_invalid(dR / drho_term)
-        fR_EoM_all[i, j] = EoM
-        
-# Collect symmetron solutions
-for i, logMvir in enumerate(sym_logMvir_range):
-    for j, logMs in enumerate(logMs_range):
-        for k, logLc in enumerate(logLc_range):
+    starttime = time.time()
+    
+    # f(R) parameters:
+    logfR0_range = np.arange(-8, -5+dfR0/2, dfR0)
+    fR_logMvir_range = np.arange(10, 13.5+fR_dMvir/2, fR_dMvir)
+    # Symmeton parameters:
+    logMs_range = np.arange(-6.5, -3+dMs/2, dMs)
+    logLc_range = np.arange(-3, 3+dLc/2, dLc)
+    sym_logMvir_range = np.arange(10, 13.5+sym_dMvir/2, sym_dMvir)
+    
+    # set up grid structure
+    th_ind = grid.disc_idx
+    r = grid.r[:, th_ind]
+    
+    # set up empty fR/sym arrays
+    fR_rs_all = np.zeros([fR_logMvir_range.size, logfR0_range.size])
+    fR_EoM_all = np.zeros([fR_logMvir_range.size, logfR0_range.size, N_r])
+    fR_a5_all = np.zeros_like(fR_EoM_all)
+    
+    sym_rs_all = np.zeros([sym_logMvir_range.size, logMs_range.size, 
+                           logLc_range.size])
+    sym_field_all = np.zeros([sym_logMvir_range.size, logMs_range.size, 
+                              logLc_range.size, N_r])
+    sym_a5_all = np.zeros_like(sym_field_all)
+    
+    # Collect fR solutions
+    for i, logMvir in enumerate(fR_logMvir_range):
+        Mvir = M_sun * 10**logMvir
+        for j, logfR0 in enumerate(logfR0_range):
+            fR0 = -10**logfR0
             
             # get rs
-            rs = symf.get_rs(logMs, logLc, logMvir, N_r, N_th,
-                             threshold=sym_threshold, 
-                             unscrthreshold=sym_unscrfieldthreshold, 
-                             unscrlapthreshold=sym_unscrlapthreshold)
-            # check if fully screened/unscreened
-            if isinstance(rs, int) or rs is np.inf:
-                sym_rs_all[i, j, k] = rs 
+            rs = fRf.get_rs(logfR0, logMvir, N_r, N_th, threshold=fR_threshold,
+                            unscrthreshold=fR_unscrthreshold)
+            # check if fully unscreened
+            if isinstance(rs, int):
+                fR_rs_all[i, j] = rs
                 continue
-            sym_rs_all[i, j, k] = rs[th_ind]
+            fR_rs_all[i, j] = rs[th_ind]
             
-            # load sym field
-            u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
-            sym_field_all[i, j, k] = u[:, th_ind] / u_inf
+            # load fR field
+            fR = fRf.load_solution(logfR0, logMvir, N_r, N_th)
             
-            # get sym a5
-            a5 = symf.get_a5(u, u_inf, magnitude=True)[:, th_ind]
-            sym_a5_all[i, j, k] = np.abs(a5) / np.abs(a5).max()     
-
-### plotting ###
-# set up figure
-asp = 4/3
-fig, ((tax1, ax1, ax2), (tax2, ax3, ax4)) = plt.subplots(
-                                                nrows=2, ncols=3, sharex=True,
-                                                width_ratios=[0.01, 1, 1], 
-                                                figsize=(size, size / asp))
-
-# set up line formatting 
-line_color = cmap(0.75)
-scr_line_color = cmap(0.2)
-h_line_color = cmap(0.1)
-line_alpha = 0.5
-
-# plot fR screening conditon (ax1) and fifth force (ax2)
-for i, logMvir in enumerate(fR_logMvir_range):
-    # cutoff solutions once they reach the splashback radius
-    R_SB = galf.get_dark_matter_parameters(M_sun * 10**logMvir)['SB']
-    in_range = r <= R_SB
-    for j, logfR0 in enumerate(logfR0_range):
-        if fR_rs_all[i, j] < 0: # don't plot fully unscreened solutions
-            continue
-        
-        ax1.plot(r[in_range]/fR_rs_all[i, j], fR_EoM_all[i, j][in_range], 
-                 color=line_color, alpha=line_alpha)
-        ax2.plot(r[in_range]/fR_rs_all[i, j], fR_a5_all[i, j][in_range], 
-                 color=line_color, alpha=line_alpha)
-
-# plot sym screening condition (ax3) and fifth force (ax4)
-for i, logMvir in enumerate(sym_logMvir_range):
-    # cutoff solutions once they reach the splashback radius
-    R_SB = galf.get_dark_matter_parameters(M_sun * 10**logMvir)['SB'] 
-    in_range = r <= R_SB
-    for j, logMs in enumerate(logMs_range):
-        for k, logLc in enumerate(logLc_range):
-            rs = sym_rs_all[i, j, k]
-            if rs is np.inf: # SSB not yet occured (fully screened)
-                continue
-            elif rs == -1: # fully unscreened by field threshold
-                continue
-            elif rs == -2: # fully unscreened by central laplacian threshold               
-                # calculate rs, if no central laplacian threshold
-                rs = symf.get_rs(logMs, logLc, logMvir, N_r, N_th, 
+            # get fR a5
+            a5 = fRf.get_a5(fR, fR0, magnitude=True)[:, th_ind]
+            fR_a5_all[i, j] = np.abs(a5) / np.abs(a5).max()
+            
+            # get fR curvature-density ratio
+            drho = galf.get_densities(Mvir, grid.r, grid.theta, total=True,
+                                      splashback_cutoff=True)['total'][:, th_ind]
+            dR = fRf.delta_R(fR[:, th_ind], fR0)
+            drho_term = fRf.delta_rho_term(drho)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                EoM = np.ma.masked_invalid(dR / drho_term)
+            fR_EoM_all[i, j] = EoM
+            
+    # Collect symmetron solutions
+    for i, logMvir in enumerate(sym_logMvir_range):
+        for j, logMs in enumerate(logMs_range):
+            for k, logLc in enumerate(logLc_range):
+                
+                # get rs
+                rs = symf.get_rs(logMs, logLc, logMvir, N_r, N_th,
                                  threshold=sym_threshold, 
                                  unscrthreshold=sym_unscrfieldthreshold, 
-                                 unscrlapthreshold=1)[th_ind]
+                                 unscrlapthreshold=sym_unscrlapthreshold)
+                # check if fully screened/unscreened
+                if isinstance(rs, int) or rs is np.inf:
+                    sym_rs_all[i, j, k] = rs 
+                    continue
+                sym_rs_all[i, j, k] = rs[th_ind]
                 
                 # load sym field
                 u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
@@ -444,57 +378,113 @@ for i, logMvir in enumerate(sym_logMvir_range):
                 
                 # get sym a5
                 a5 = symf.get_a5(u, u_inf, magnitude=True)[:, th_ind]
-                sym_a5_all[i, j, k] = np.abs(a5) / np.abs(a5).max()
-                                    
-                # highlight these solutions in a different colour
-                linecol = scr_line_color
-            else:
-                # plot valid partially screened solutions with usual parameters
-                linecol = line_color
-
-            ax3.plot(r[in_range]/rs, sym_field_all[i, j, k][in_range], 
-                     color=linecol, alpha=line_alpha)
-            ax4.plot(r[in_range]/rs, sym_a5_all[i, j, k][in_range], 
-                     color=linecol, alpha=line_alpha)
-  
-# format axes and plot threshold lines
-for ax in [ax1, ax2, ax3, ax4]:
-    ax.axvline(1, color=h_line_color, alpha=line_alpha, linestyle='dashed')
-    ax.set_xticks(np.arange(0, 5.0001, 2))
-    ax.set_xlim([-0.01, 5.01])
-    ax.set_ylim([-0.01, 1.01])
-ax1.axhline(fR_threshold, color=h_line_color, alpha=line_alpha, linestyle='dashed')
-ax3.axhline(sym_threshold, color=h_line_color, alpha=line_alpha, linestyle='dashed')
-
-# set axis labels and titles
-ax3.set_xlabel(r'$r\ /\ r_s$')
-ax4.set_xlabel(r'$r\ /\ r_s$')
-ax1.set_ylabel(r'$\delta R\ /\ 8\pi G\delta\rho/c^2$')
-ax2.set_ylabel(r'$|\mathbf{a}_{5,f_R}|\ /\ \mathrm{max}(|\mathbf{a}_{5,f_R}|)$')
-ax3.set_ylabel(r'$\varphi\ /\ \varphi_\infty$')
-ax4.set_ylabel(r'$|\mathbf{a}_{5,sym}|\ /\ \mathrm{max}(|\mathbf{a}_{5,sym}|)$')
-ax1.set_title('Screening Conditions')
-ax2.set_title('Fifth Forces')
-row_labels = [r'$f(R)$', 'Symmetron']
-for i, tax in enumerate([tax1, tax2]):
-    tax.axis('off')
-    tax.text(0.5, 0.5, s=row_labels[i], va='center', rotation=90,
-             fontsize=plt.rcParams['axes.titlesize'])
-
-fig.tight_layout(pad=0.1)
-
-plt.show()
-        
-if savefigure is True:
-    plt.savefig('Fig_2._Stacked_screening_conditions_new.png', dpi=dpi)
-    print('Fig 2. saved!')
-
-fintime = time.time()
-print('Fig. 2 took {:.2f}s'.format(fintime-starttime))   
+                sym_a5_all[i, j, k] = np.abs(a5) / np.abs(a5).max()     
+    
+    ### plotting ###
+    # set up figure
+    asp = 4/3
+    fig, ((tax1, ax1, ax2), (tax2, ax3, ax4)) = plt.subplots(
+                                                    nrows=2, ncols=3, sharex=True,
+                                                    width_ratios=[0.01, 1, 1], 
+                                                    figsize=(size, size / asp))
+    
+    # set up line formatting 
+    line_color = cmap(0.75)
+    scr_line_color = cmap(0.2)
+    h_line_color = cmap(0.1)
+    line_alpha = 0.5
+    
+    # plot fR screening conditon (ax1) and fifth force (ax2)
+    for i, logMvir in enumerate(fR_logMvir_range):
+        # cutoff solutions once they reach the splashback radius
+        R_SB = galf.get_dark_matter_parameters(M_sun * 10**logMvir)['SB']
+        in_range = r <= R_SB
+        for j, logfR0 in enumerate(logfR0_range):
+            if fR_rs_all[i, j] < 0: # don't plot fully unscreened solutions
+                continue
+            
+            ax1.plot(r[in_range]/fR_rs_all[i, j], fR_EoM_all[i, j][in_range], 
+                     color=line_color, alpha=line_alpha)
+            ax2.plot(r[in_range]/fR_rs_all[i, j], fR_a5_all[i, j][in_range], 
+                     color=line_color, alpha=line_alpha)
+    
+    # plot sym screening condition (ax3) and fifth force (ax4)
+    for i, logMvir in enumerate(sym_logMvir_range):
+        # cutoff solutions once they reach the splashback radius
+        R_SB = galf.get_dark_matter_parameters(M_sun * 10**logMvir)['SB'] 
+        in_range = r <= R_SB
+        for j, logMs in enumerate(logMs_range):
+            for k, logLc in enumerate(logLc_range):
+                rs = sym_rs_all[i, j, k]
+                if rs is np.inf: # SSB not yet occured (fully screened)
+                    continue
+                elif rs == -1: # fully unscreened by field threshold
+                    continue
+                elif rs == -2: # fully unscreened by central laplacian threshold               
+                    # calculate rs, if no central laplacian threshold
+                    rs = symf.get_rs(logMs, logLc, logMvir, N_r, N_th, 
+                                     threshold=sym_threshold, 
+                                     unscrthreshold=sym_unscrfieldthreshold, 
+                                     unscrlapthreshold=1)[th_ind]
+                    
+                    # load sym field
+                    u, u_inf = symf.load_solution(logMs, logLc, logMvir, N_r, N_th)
+                    sym_field_all[i, j, k] = u[:, th_ind] / u_inf
+                    
+                    # get sym a5
+                    a5 = symf.get_a5(u, u_inf, magnitude=True)[:, th_ind]
+                    sym_a5_all[i, j, k] = np.abs(a5) / np.abs(a5).max()
+                                        
+                    # highlight these solutions in a different colour
+                    linecol = scr_line_color
+                else:
+                    # plot valid partially screened solutions with usual parameters
+                    linecol = line_color
+    
+                ax3.plot(r[in_range]/rs, sym_field_all[i, j, k][in_range], 
+                         color=linecol, alpha=line_alpha)
+                ax4.plot(r[in_range]/rs, sym_a5_all[i, j, k][in_range], 
+                         color=linecol, alpha=line_alpha)
+      
+    # format axes and plot threshold lines
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.axvline(1, color=h_line_color, alpha=line_alpha, linestyle='dashed')
+        ax.set_xticks(np.arange(0, 5.0001, 2))
+        ax.set_xlim([-0.01, 5.01])
+        ax.set_ylim([-0.01, 1.01])
+    ax1.axhline(fR_threshold, color=h_line_color, alpha=line_alpha, linestyle='dashed')
+    ax3.axhline(sym_threshold, color=h_line_color, alpha=line_alpha, linestyle='dashed')
+    
+    # set axis labels and titles
+    ax3.set_xlabel(r'$r\ /\ r_s$')
+    ax4.set_xlabel(r'$r\ /\ r_s$')
+    ax1.set_ylabel(r'$\delta R\ /\ 8\pi G\delta\rho/c^2$')
+    ax2.set_ylabel(r'$|\mathbf{a}_{5,f_R}|\ /\ \mathrm{max}(|\mathbf{a}_{5,f_R}|)$')
+    ax3.set_ylabel(r'$\varphi\ /\ \varphi_\infty$')
+    ax4.set_ylabel(r'$|\mathbf{a}_{5,sym}|\ /\ \mathrm{max}(|\mathbf{a}_{5,sym}|)$')
+    ax1.set_title('Screening Conditions')
+    ax2.set_title('Fifth Forces')
+    row_labels = [r'$f(R)$', 'Symmetron']
+    for i, tax in enumerate([tax1, tax2]):
+        tax.axis('off')
+        tax.text(0.5, 0.5, s=row_labels[i], va='center', rotation=90,
+                 fontsize=plt.rcParams['axes.titlesize'])
+    
+    fig.tight_layout(pad=0.1)
+    
+    plt.show()
+            
+    if savefigure is True:
+        plt.savefig('Fig_2._Stacked_screening_conditions_new.png', dpi=dpi)
+        print('Fig 2. saved!')
+    
+    fintime = time.time()
+    print('Fig. 2 took {:.2f}s'.format(fintime-starttime))   
 
 
 #%% Fig 3 
 
+"""
 # Screening radius for a range of input parameters overplotted on density
 starttime = time.time()
 
@@ -1153,8 +1143,22 @@ if savefigure is True:
 
 fintime = time.time()
 print('Fig. 5 took {:.2f}s'.format(fintime-starttime))  
-
+"""
 #%% Timings
 
-tfinish = time.time()
-print('Total Time Taken:', tfinish-tstart)
+if __name__ == '__main__':
+    tstart = time.time()
+
+    #plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
+    #              N_stellar_scale_length_plotted=5, N_grid_lines_plotted=5)
+
+    #plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5, 
+    #                  grid=grid, fR_threshold = 0.9, fR_unscrthreshold = 1e-3,
+    #                  sym_threshold = 0.1, sym_unscrfieldthreshold = 1e-3,
+    #                  sym_unscrlapthreshold = 1e-1)
+    plot_figure_2(dfR0=1, fR_dMvir=1, dMs=1, dLc=1, sym_dMvir=1, 
+                      grid=grid, fR_threshold = 0.9, fR_unscrthreshold = 1e-3,
+                      sym_threshold = 0.1, sym_unscrfieldthreshold = 1e-3,
+                      sym_unscrlapthreshold = 1e-1)
+    tfinish = time.time()
+    print('Total Time Taken:', tfinish-tstart)
