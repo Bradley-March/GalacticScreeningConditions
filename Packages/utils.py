@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Utilities to help calculate screening, namely: 
+    gradient, laplacian, volume_elements, and mass_enclosed.
+
 Created: Dec 2023
 Author: Bradley March
 """

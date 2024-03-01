@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Code to create the figures of screening conditions paper (2310.19955)
+Code to create the figures of screening conditions paper (2310.19955).
 
 Created: June 2022
 Author: Bradley March

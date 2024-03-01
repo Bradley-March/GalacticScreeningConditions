@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+Relations between galactic density model parameters, plus functions to run the 
+pipeline and calculates a typical galaxy from a single input, Mvir. 
+
+
 Created: June 2022
 Author: Bradley March
 """

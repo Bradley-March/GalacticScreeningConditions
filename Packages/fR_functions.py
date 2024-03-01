@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Functions to perform various utilities and analysis of the f(R) theory. 
+
 Created: June 2022
 Author: Bradley March
 """

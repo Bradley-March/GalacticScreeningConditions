@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Running all field solutions required to plot the figures in ScreeningPapersFigs
+
 Created: Dec 2023
 Author: Bradley March
 """
