@@ -73,7 +73,7 @@ def get_full_polars(th, r, fg, extend_theta=True, rmaxplotted=None):
 
 
 def bool_boundary_divider(data_bool, x, y, ax, linecolor='r', linewidth=1):
-    """Takes 2D boolean array and an axis with the same shape and plots a 
+    """Takes 2D boolean array and an axis with the same shape and plots 
     all dividing lines between 0 and 1 values."""
     
     # assumes constant spacing in x, y
@@ -290,7 +290,7 @@ def plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
     fintime = time.time()
     print('Fig. 1 took {:.2f}s'.format(fintime-starttime))
 
-#%% Fig 2 (with a5 plots, 2x2 grid)
+#%% Fig 2
 
 def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5, 
                   grid=grid, fR_threshold=0.9, fR_unscrthreshold=1e-3,
@@ -413,7 +413,7 @@ def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5,
                     continue
                 elif rs == -1: # fully unscreened by field threshold
                     continue
-                elif rs == -2: # fully unscreened by central laplacian threshold               
+                elif rs == -2: # fully unscreened by central laplacian thresh               
                     # calculate rs, if no central laplacian threshold
                     rs = symf.get_rs(logMs, logLc, logMvir, N_r, N_th, 
                                      threshold=sym_threshold, 
@@ -432,7 +432,7 @@ def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5,
                     # highlight these solutions in a different colour
                     linecol = scr_line_color
                 else:
-                    # plot valid partially screened solutions with usual parameters
+                    # plot valid partially screened solutions in usual colour
                     linecol = line_color
     
                 ax3.plot(r[in_range]/rs, sym_field_all[i, j, k][in_range], 
@@ -609,8 +609,10 @@ def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
     axMsT.text(0.74, 0.5, text_Ms2, ha='center', fontsize=10)
     axLcT.text(0.27, 0.5, text_Lc1, ha='center')
     axLcT.text(0.74, 0.5, text_Lc2, ha='center', fontsize=10)
-    axfRrow.text(0.5, 0.5, s=text_fRrow, ha='center', fontsize=20, rotation=90)
-    axsymrow.text(0.5, 0.5, s=text_symrow, ha='center', fontsize=20, rotation=90)
+    axfRrow.text(0.5, 0.5, s=text_fRrow, ha='center', 
+                 fontsize=20, rotation=90)
+    axsymrow.text(0.5, 0.5, s=text_symrow, ha='center', 
+                  fontsize=20, rotation=90)
     
     # set up theta coordinate for label
     label_angle = 0.75 * np.pi
@@ -667,7 +669,8 @@ def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
     
     # add legend
     lgax.axis('off')
-    lgax.legend([line, line_approx], ['True screening surface', r'Approximate $r_s$'])
+    lgax.legend([line, line_approx], 
+                ['True screening surface', r'Approximate $r_s$'])
     
     if savefigure is True:
         plt.savefig("Fig_3._Partial_Screening_new.png", dpi=dpi)
@@ -760,7 +763,8 @@ def plot_figure_4(dMvir=0.1, dfR0=0.1, dMs=0.1, dLc=0.1,
         for i, logLc in enumerate(logLc_range):
             # calculate true and approx rs solutions     
             rs = symf.get_rs(logMs_fixed, logLc, logMvir, N_r, N_th,
-                             threshold=sym_threshold, unscrthreshold=sym_unscrthreshold, 
+                             threshold=sym_threshold, 
+                             unscrthreshold=sym_unscrthreshold, 
                              unscrlapthreshold=sym_unscrlapthreshold)
             rs_SSB = symf.get_rho_SSB_rs(logMs_fixed, logLc, rhos['total'])
             
@@ -1023,7 +1027,8 @@ def plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
     fontsize = 11
     asp = 1
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(size, size/asp), 
-                                   height_ratios=[0.6, 1], constrained_layout=False)
+                                   height_ratios=[0.6, 1], 
+                                   constrained_layout=False)
     # inset axis
     axins = ax1.inset_axes([0.52, 0.3, 0.47, 0.68])
     
@@ -1046,11 +1051,11 @@ def plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
     ax1.text(0.05, 0.05, r'$\bm{r_s=8\,\mathrm{kpc}}$', transform=ax1.transAxes, 
              fontsize=fontsize, color='k')
     ax1.text(0.48, 0.64, r'$\mathbf{Binary\ Fully}$' '\n' r'$\mathbf{Unscreened}$', 
-             transform=ax1.transAxes,
-             fontsize=fontsize, color='grey', rotation=90, ha='center', va='center')
+             transform=ax1.transAxes, fontsize=fontsize, color='grey', 
+             rotation=90, ha='center', va='center')
     ax1.text(0.395, 0.64, r'$\mathbf{Binary\ Fully}$' '\n' '$\mathbf{Screened}$', 
-             transform=ax1.transAxes, 
-             fontsize=fontsize, color='grey', rotation=90, ha='center', va='center')
+             transform=ax1.transAxes, fontsize=fontsize, color='grey', 
+             rotation=90, ha='center', va='center')
     # Formatting
     ax1.set_xlabel('$\log_{10} f_{R0}$')
     ax1.set_ylabel('$r_s\ /\ \mathrm{kpc}$')
