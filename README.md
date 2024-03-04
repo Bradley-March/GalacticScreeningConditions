@@ -6,5 +6,5 @@ This repository produces the figures contained within [our paper on galactic (sc
 
 The code to create the figures is contained within ScreeningPaperFigs.py.
 
-The solutions required to run this file can be made available upon request (email: [bradley.march@nottingham.ac.uk](bradley.march@nottingham.ac.uk)), or can be produced by running run_solutions.py (_note: this will take considerable time_).
+The solutions required to run this file can be made available upon request (email: bradley.march@nottingham.ac.uk), or can be produced by running run_solutions.py (_note: this will take considerable time_).
 
