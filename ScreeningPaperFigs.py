@@ -1133,35 +1133,20 @@ def plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
     fintime = time.time()
     print('Fig. 5 took {:.2f}s'.format(fintime-starttime))  
 
-#%% Timings
+#%% Running the plotting functions
 
 if __name__ == '__main__':
     tstart = time.time()
     
-    plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
-                  N_stellar_scale_length_plotted=5, N_grid_lines_plotted=5,
-                  savefigure=False)
+    plot_figure_1()
     
-    plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5, 
-                  grid=grid, fR_threshold = 0.9, fR_unscrthreshold = 1e-3,
-                  sym_threshold = 0.1, sym_unscrfieldthreshold = 1e-3,
-                  sym_unscrlapthreshold = 1e-1)
+    plot_figure_2()
     
-    plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
-            logfR0_range=np.array([-6.3,-6.4,-6.5,-6.6,-7.0,-7.3,-7.6]),
-            logMs_range=np.array([-4.2,-4.6,-4.8,-4.9,-5.1,-5.8,-6.1,-6.3]),
-            logLc_range = np.array([-1.5,-0.9,-0.7,-0.6,-0.4,0.3,0.6,0.9]),
-            grid=grid, savefigure=False)
+    plot_figure_3()
     
-    plot_figure_4(dMvir=0.1, dfR0=0.1, dMs=0.1, dLc=0.1, 
-                  logMs_fixed=-4.5, logLc_fixed=-1, grid=grid,
-                  fR_threshold=0.9, fR_unscrthreshold=1e-3, 
-                  sym_threshold=0.1, sym_unscrthreshold=1e-3, 
-                  sym_unscrlapthreshold=1e-1, savefigure=False)
+    plot_figure_4()
 
-    plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
-                  fR_threshold=0.9, fR_unscrthreshold=1e-3, sym_threshold=0.1,
-                  sym_unscrthreshold=1e-3, sym_unscrlapthreshold = 1e-1)
+    plot_figure_5()
     
     tfinish = time.time()
     print('Total Time Taken:', tfinish-tstart)
