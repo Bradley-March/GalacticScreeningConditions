@@ -19,9 +19,9 @@ Our analysis of the screening conditions, section 3.3 of the paper, is quantifie
 
 ## Authors
 
-```Solvers``` and code within was created by Aneesh P. Naik.
+```Solvers``` and code within was created by **Aneesh P. Naik**.
 
-All other code was created by Bradley March.
+All other code was created by **Bradley March**.
 
 ## Citation
 
