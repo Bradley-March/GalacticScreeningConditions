@@ -27,6 +27,12 @@ All other code was created by **Bradley March**.
 
 Accepted for publishing in JCAP. Will update with full reference upon finalisation.
 
+## License
+
+Copyright (2024) Bradley March.
+
+`GalacticScreeningConditions` is free software made available under the MIT license. For details see LICENSE.
+
 
 
 
