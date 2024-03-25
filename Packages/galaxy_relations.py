@@ -102,7 +102,7 @@ def calc_stellar_scale_height(stellar_scale_length):
 
 #%% Calculate density profiles from parameters
 
-def calc_dark_matter_desnity(rgrid, virial_normalisation, virial_scale_radius):
+def calc_dark_matter_density(rgrid, virial_normalisation, virial_scale_radius):
     """Calculate the dark matter density as an NFW profile.
     [Navarro, Frenk and White (1995).]"""
     x = rgrid / virial_scale_radius
@@ -169,7 +169,7 @@ def get_dark_matter_density(virial_mass, rgrid, splashback_cutoff=True):
     """Calculates the dark matter density profile for a given mass, assuming
     mean values on all empirical relations."""
     DMP = get_dark_matter_parameters(virial_mass)
-    dark_matter_density = calc_dark_matter_desnity(rgrid, 
+    dark_matter_density = calc_dark_matter_density(rgrid, 
                                                    DMP['norm'], DMP['Rs'])
     if splashback_cutoff is True: # cut off density at SB radius
         dark_matter_density[rgrid >= DMP['SB']] = 0 
