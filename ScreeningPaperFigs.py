@@ -281,7 +281,7 @@ def plot_figure_1(logMvir=11.5, logfR0=-6.4, logMs=-4.5, logLc=-1, grid=grid,
         cbar.ax.set_ylabel(label, rotation=rotations[ind%2], 
                            labelpad=labelpads[ind%2])
         
-    plt.show()
+    plt.show(block=False)
     
     if savefigure is True:
         plt.savefig('Fig_1._rho,_fR,_sym_and_scr_conds_new.png', dpi=dpi)
@@ -468,7 +468,7 @@ def plot_figure_2(dfR0=0.2, fR_dMvir=0.2, dMs=0.5, dLc=0.5, sym_dMvir=0.5,
     
     fig.tight_layout(pad=0.1)
     
-    plt.show()
+    plt.show(block=False)
             
     if savefigure is True:
         plt.savefig('Fig_2._Stacked_screening_conditions_new.png', dpi=dpi)
@@ -671,6 +671,8 @@ def plot_figure_3(logMvir=11.5, logMs_fixed=-4.5, logLc_fixed=-1,
     lgax.axis('off')
     lgax.legend([line, line_approx], 
                 ['True screening surface', r'Approximate $r_s$'])
+    
+    plt.show(block=False)
     
     if savefigure is True:
         plt.savefig("Fig_3._Partial_Screening_new.png", dpi=dpi)
@@ -954,7 +956,7 @@ def plot_figure_4(dMvir=0.1, dfR0=0.1, dMs=0.1, dLc=0.1,
     ax.annotate("", (x1 + L * srot, y1 - L * crot), (x1, y1), **arrargs)
     
     fig.get_layout_engine().set(h_pad=-1)
-    plt.show()
+    plt.show(block=False)
     
     if savefigure is True:
         plt.savefig("Fig_4._Mass_Screened_new.png", dpi=dpi)
@@ -1124,7 +1126,7 @@ def plot_figure_5(dfR0=0.05, dfR0_fine=0.01, dMs=0.1, dLc=0.1,
     ax2.set_ylim([logMs_range.min() - dMs/2, logMs_range.max() + dMs/2])
     fig.tight_layout(pad=0.3)
     
-    plt.show()
+    plt.show(block=False)
     
     if savefigure is True:
         plt.savefig('Fig 5. MW Screening Radius (new).png')
@@ -1150,3 +1152,5 @@ if __name__ == '__main__':
     
     tfinish = time.time()
     print('Total Time Taken:', tfinish-tstart)
+
+# %%
