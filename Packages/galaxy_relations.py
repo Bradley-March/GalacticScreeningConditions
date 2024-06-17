@@ -32,13 +32,13 @@ def virial_mass_to_stellar_mass(virial_mass, logM1=11.590, N=0.0351,
 def stellar_mass_to_virial_mass(stellar_mass, logM1=11.590, N=0.0351, 
                                 beta=1.376, gamma=0.608):
     """Inverse of SHMR."""
-    with np.errstate(all='ignore'):
-        inverse_virial_mass2stellar_mass = inversefunc(
-                                                virial_mass_to_stellar_mass, 
-                                                args=(logM1, N, beta, gamma), 
-                                                domain=[M_sun, 1e30 * M_sun])
-        virial_mass = inverse_virial_mass2stellar_mass(stellar_mass)
-        return virial_mass
+    inverse_virial_mass2stellar_mass = inversefunc(virial_mass_to_stellar_mass,
+                                            args=(logM1, N, beta, gamma), 
+                                            domain=[M_sun, 1e30 * M_sun], 
+                                            accuracy=-int(np.log10(1e6*M_sun)))
+    virial_mass = inverse_virial_mass2stellar_mass(stellar_mass)
+    return virial_mass
+
 
 #%% Dark matter parameter pipeline functions
 
