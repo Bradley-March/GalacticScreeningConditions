@@ -25,25 +25,23 @@ All other code was created by **Bradley March**.
 
 ## Citation
 
-*Accepted for publishing in JCAP. Will update with full reference upon finalisation.*
-
 If you use this code for your research please include the following citation:
 ```
-@ARTICLE{2023arXiv231019955B,
+@ARTICLE{2024JCAP...04..004B,
        author = {{Burrage}, Clare and {March}, Bradley and {Naik}, Aneesh P.},
-        title = "{Accurate Computation of the Screening of Scalar Fifth Forces in Galaxies}",
-      journal = {arXiv e-prints},
-     keywords = {Astrophysics - Cosmology and Nongalactic Astrophysics, Astrophysics - Astrophysics of Galaxies, General Relativity and Quantum Cosmology},
-         year = 2023,
-        month = oct,
-          eid = {arXiv:2310.19955},
-        pages = {arXiv:2310.19955},
-          doi = {10.48550/arXiv.2310.19955},
+        title = "{Accurate computation of the screening of scalar fifth forces in galaxies}",
+      journal = {\jcap},
+     keywords = {dark energy theory, galaxy surveys, modified gravity, Astrophysics - Cosmology and Nongalactic Astrophysics, Astrophysics - Astrophysics of Galaxies, General Relativity and Quantum Cosmology},
+         year = 2024,
+        month = apr,
+       volume = {2024},
+       number = {4},
+          eid = {004},
+        pages = {004},
+          doi = {10.1088/1475-7516/2024/04/004},
 archivePrefix = {arXiv},
        eprint = {2310.19955},
- primaryClass = {astro-ph.CO},
-       adsurl = {https://ui.adsabs.harvard.edu/abs/2023arXiv231019955B},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+ primaryClass = {astro-ph.CO}
 }
 ```
 
