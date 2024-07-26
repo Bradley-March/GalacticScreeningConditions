@@ -161,7 +161,7 @@ def get_rs(logfR0, logMvir, N_r, N_th, threshold=0.9, unscrthreshold=1e-3):
                               splashback_cutoff=True, total=True)
     
     # calculate screening radius
-    rs = calc_rs(fR, fR0, rhos['total'], grid, threshold=0.9)
+    rs = calc_rs(fR, fR0, rhos['total'], grid, threshold, unscrthreshold)
     return rs
 
 #%% Binary screening condition
