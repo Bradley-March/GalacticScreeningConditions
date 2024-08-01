@@ -8,7 +8,7 @@ Author: Bradley March
 
 #%% Python Preamble
 
-# Import relevent modules
+# Import relevant modules
 import numpy as np
 import h5py
 import os
@@ -36,7 +36,7 @@ def get_filename(logMs: float, logLc: float, logMvir: float,
     return  os.path.join(cwd, 'solutions', 'sym', filename)
 
 def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
-    """Saves the sym field profile, along with its assosiated parameters."""
+    """Saves the sym field profile, along with its associated parameters."""
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
     file = h5py.File(filename, 'w')
     
@@ -56,7 +56,7 @@ def save_solution(logMs, logLc, logMvir, N_r, N_th, u, u_inf, cwd=cwd):
     return
 
 def load_solution(logMs, logLc, logMvir, N_r, N_th, cwd=cwd):
-    """Loads the sym field profile, for the assosiated input parameters."""
+    """Loads the sym field profile, for the associated input parameters."""
     filename = get_filename(logMs, logLc, logMvir, N_r, N_th, cwd=cwd)
     # check if solution already exists
     if os.path.exists(filename) is False:
@@ -131,7 +131,7 @@ def calc_rs(u, u_inf, grid=None,
         N_r, N_th = u.shape()
         grid = Symm2DSolver(N_r=N_r, N_th=N_th, r_min=r_min, r_max=r_max)
     
-    # check if field evades our previous fully unscreened definiton
+    # check if field evades our previous fully unscreened definition
     lap_u = laplacian(grid, u, u_inf) 
     if any(lap_u[0, :]/lap_u.max() > unscrlapthreshold):
         rs = -2 
@@ -187,7 +187,7 @@ def get_rho_SSB(logMs, logLc):
 def get_rho_SSB_rs(logMs, logLc, drho, grid=None):
    """Calculate the approximate screening surface, as the region where the 
    density is equal to the SSB density."""
-   # check if SSB has occured yet
+   # check if SSB has occurred yet
    rho_SSB = get_rho_SSB(logMs, logLc)
    if rho_SSB < rho_m:
        return np.inf

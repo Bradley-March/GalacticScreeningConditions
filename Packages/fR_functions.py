@@ -8,7 +8,7 @@ Author: Bradley March
 
 #%% Python Preamble
 
-# Import relevent modules
+# Import relevant modules
 import numpy as np
 import h5py
 import os 
@@ -35,7 +35,7 @@ def get_filename(logfR0: float, logMvir: float,
     return  os.path.join(cwd, 'solutions', 'fR', filename)
 
 def save_solution(logfR0, logMvir, N_r, N_th, fR, cwd=cwd):
-    """Saves the fR field profile, along with its assosiated parameters."""
+    """Saves the fR field profile, along with its associated parameters."""
     filename = get_filename(logfR0, logMvir, N_r, N_th, cwd=cwd)
     file = h5py.File(filename, 'w')
     
@@ -53,7 +53,7 @@ def save_solution(logfR0, logMvir, N_r, N_th, fR, cwd=cwd):
     return
 
 def load_solution(logfR0, logMvir, N_r, N_th, cwd=cwd):
-    """Loads the fR field profile, for the assosiated input parameters."""
+    """Loads the fR field profile, for the associated input parameters."""
     filename = get_filename(logfR0, logMvir, N_r, N_th, cwd=cwd)
     # check if solution not yet saved
     if os.path.exists(filename) is False:
@@ -79,7 +79,7 @@ def solve_field(logfR0, logMvir, N_r, N_th, cwd=cwd):
         print('fR solution already exists!')
         return
     
-    # derive model paramaters
+    # derive model parameters
     fR0 = -10**logfR0
     Mvir = 10**logMvir * M_sun
 
@@ -149,7 +149,7 @@ def get_rs(logfR0, logMvir, N_r, N_th, threshold=0.9, unscrthreshold=1e-3):
     # load field profile
     fR = load_solution(logfR0, logMvir, N_r, N_th)
 
-    # calculate model paramters
+    # calculate model parameters
     fR0 = -10**logfR0
     Mvir = M_sun * 10**logMvir
 

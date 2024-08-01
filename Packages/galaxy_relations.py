@@ -25,8 +25,8 @@ def virial_mass_to_stellar_mass(virial_mass, logM1=11.590, N=0.0351,
     [Equation 2 in Moster, Naab and White (2012), parameters from Table 3.]"""
     M1 = M_sun * 10**(logM1)
     numerator = 2 * N * virial_mass
-    denomenator = (virial_mass / M1)**(-beta) + (virial_mass / M1)**(gamma)
-    stellar_mass =  numerator / denomenator 
+    denominator = (virial_mass / M1)**(-beta) + (virial_mass / M1)**(gamma)
+    stellar_mass =  numerator / denominator 
     return stellar_mass
 
 def stellar_mass_to_virial_mass(stellar_mass, logM1=11.590, N=0.0351, 
@@ -87,7 +87,7 @@ def calc_stellar_scale_length(stellar_mass, alpha=0.14, beta=0.39, gamma=0.10,
     return stellar_scale_length
 
 def calc_stellar_normalisation(stellar_mass, stellar_scale_length):
-    """Reversing the total stellar mass defintion to find the (area) density 
+    """Reversing the total stellar mass definition to find the (area) density 
     normalisation."""
     denom = 2 * np.pi * stellar_scale_length**2
     stellar_normalisation = stellar_mass / denom
