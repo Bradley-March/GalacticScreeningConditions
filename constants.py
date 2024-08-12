@@ -18,10 +18,6 @@ logM_sun = np.log10(M_sun)
 L_sun = 3.846e+26 # Solar luminosity 
 Mag_sun = 4.83 # Solar absolute magnitude
 
-# Planck units
-M_pl = 2.176434e-08
-L_pl = 1.616255e-25
-
 # Cosmological parameters
 h = 0.7 # Hubble factor
 H0 = h * 100.0 * 1000.0 / Mpc # Hubble constant
